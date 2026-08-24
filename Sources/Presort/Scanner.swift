@@ -1,8 +1,8 @@
 import Foundation
 
-/// De lus: post ophalen, aan het model voorleggen, het antwoord narekenen,
-/// en er een voorstel van maken. Er wordt hier niets aangemaakt -- dat gebeurt
-/// pas als de gebruiker in het venster op goedkeuren drukt.
+/// The loop: fetch mail, put it to the model, check the answer, and turn it into a
+/// proposal. Nothing is created here -- that happens only when the user presses approve
+/// in the window.
 @MainActor
 final class Scanner: ObservableObject {
     @Published var bezig = false
@@ -18,35 +18,34 @@ final class Scanner: ObservableObject {
         self.herkenners = herkenners
     }
 
-    /// Wat een beurt heeft opgeleverd. De aanroeper beslist wat ermee gebeurt --
-    /// het venster zet het in de balk, een beurt op de achtergrond maakt er een
-    /// melding van.
+    /// What a run produced. The caller decides what happens with it: the window puts it
+    /// in the status bar, a background run turns it into a notification.
     struct Uitkomst {
         var nagekeken = 0
         var voorgesteld = 0
-        /// Berichten waar Mail of het model uitviel. Die blijven openstaan voor
-        /// de volgende beurt, dus ze tellen niet als nagekeken.
+        /// Messages where Mail or the model dropped out. Those stay open for the next
+        /// run, so they do not count as checked.
         var mislukt = 0
         var titels: [String] = []
-        /// De voorstellen van deze beurt, zodat de aanroeper ze kan afhandelen
-        /// zonder te raden welke er nieuw bij zijn gekomen.
+        /// The proposals from this run, so the caller can handle them without guessing
+        /// which ones are new.
         var ids: [String] = []
         var melding = ""
     }
 
-    /// `voortgang` wordt tijdens de beurt aangeroepen met de regel die in de
-    /// balk hoort. Zonder die doorgifte zie je alleen de uitkomst achteraf.
+    /// `voortgang` is called during the run with the line that belongs in the status
+    /// bar. Without that hand-off you only see the outcome afterwards.
     func kijkNa(voortgang: (String) -> Void = { _ in }) async -> Uitkomst {
         var uit = Uitkomst()
         guard !bezig else { return uit }
         guard instellingen.isIngericht else {
-            uit.melding = "Vul eerst een adres en een modelnaam in bij Instellingen."
+            uit.melding = "Fill in an address and a model name under Settings first."
             laatsteMelding = uit.melding
             return uit
         }
         let punten = herkenners.actief
         guard !punten.isEmpty else {
-            uit.melding = "Er staat niets aan om op te letten. Kies bij Instellingen waar de app op moet letten."
+            uit.melding = "Nothing is switched on to look for. Choose what to look for under Settings."
             laatsteMelding = uit.melding
             return uit
         }
@@ -59,7 +58,7 @@ final class Scanner: ObservableObject {
                                  sleutel: instellingen.sleutel,
                                  model: instellingen.model)
 
-        voortgang("Post ophalen uit \(instellingen.postvak)…")
+        voortgang("Fetching mail from \(instellingen.postvak)…")
 
         let berichten: [Postvak.Bericht]
         do {
@@ -72,19 +71,19 @@ final class Scanner: ObservableObject {
 
         let nieuw = berichten.filter { !wachtrij.isGezien($0.id) }
         guard !nieuw.isEmpty else {
-            uit.melding = "Niets nieuws in \(instellingen.postvak)."
+            uit.melding = "Nothing new in \(instellingen.postvak)."
             laatsteMelding = uit.melding
             return uit
         }
 
         var voorgesteld = 0
         for b in nieuw.prefix(15) {
-            voortgang("Bezig met ‘\(b.onderwerp.prefix(40))’…")
+            voortgang("Working on ‘\(b.onderwerp.prefix(40))’…")
 
-            // Een bericht geldt pas als gezien wanneer het is beoordeeld: er kwam
-            // een voorstel uit, of het is bewust overgeslagen. Valt Mail of het
-            // model uit, dan blijft het openstaan -- anders verdwijnt het bericht
-            // stilletjes en kijkt niemand er ooit nog naar.
+            // A message only counts as seen once it has been judged: either a proposal
+            // came out, or it was deliberately skipped. If Mail or the model drops out it
+            // stays open -- otherwise the message vanishes quietly and nobody ever looks
+            // at it again.
             let tekst: String
             do {
                 tekst = try postvak.inhoud(van: b.id)
@@ -94,7 +93,7 @@ final class Scanner: ObservableObject {
             }
 
             guard !tekst.isEmpty else {
-                // Wél gelezen, er stond alleen niets in. Dat is een oordeel.
+                // Read fine, there was simply nothing in it. That is a judgement.
                 noteerOvergeslagen(b, "no readable content")
                 wachtrij.markeerGezien(b.id)
                 uit.nagekeken += 1
@@ -111,13 +110,13 @@ final class Scanner: ObservableObject {
             <<< EINDE >>>
             """
 
-            // Elk aangezet punt is één vraag, in volgorde, tot er iets raak is.
-            // Een bericht levert hooguit één voorstel op: twee herinneringen uit
-            // dezelfde mail zijn bijna altijd hetzelfde ding, twee keer gezegd.
-            // Een fout van het model is geen oordeel: dan hierna niets markeren.
+            // Every enabled point is one question, in order, until something hits. A
+            // message yields at most one proposal: two reminders out of the same mail are
+            // nearly always the same thing said twice. A failure from the model is not a
+            // judgement, so nothing is marked after one.
             var voorstel: Voorstel?
-            // Onleesbare JSON is net zo goed geen oordeel als een netwerkfout:
-            // pas als er minstens één antwoord te lezen viel, weten we iets.
+            // Unreadable JSON is as much a non-judgement as a network failure: only once
+            // at least one answer could be read do we know anything.
             var begrepen = false
             do {
                 for punt in punten {
@@ -157,15 +156,15 @@ final class Scanner: ObservableObject {
         uit.voorgesteld = voorgesteld
         let staart = uit.mislukt == 0
             ? ""
-            : " \(uit.mislukt) niet gelukt, die komen een volgende keer terug."
+            : " \(uit.mislukt) did not work, those come back next time."
         uit.melding = (voorgesteld == 0
-            ? "\(uit.nagekeken) berichten nagekeken, niets gevonden."
-            : "\(voorgesteld) voorstel(len) uit \(uit.nagekeken) berichten.") + staart
+            ? "\(uit.nagekeken) messages checked, nothing found."
+            : "\(voorgesteld) proposal(s) from \(uit.nagekeken) messages.") + staart
         laatsteMelding = uit.melding
         return uit
     }
 
-    // MARK: het antwoord narekenen
+    // MARK: checking the answer
 
     private func zekerheid(_ o: [String: Any]) -> String? {
         (o["zekerheid"] as? String)?.lowercased()
@@ -203,12 +202,12 @@ final class Scanner: ObservableObject {
         let bedrag = String((o["bedrag"] as? String ?? "").prefix(40))
         return Voorstel(soort: .herinnering, afzender: b.afzender, onderwerp: b.onderwerp,
                         titel: wat, uiterlijk: uiterlijk, bedrag: bedrag,
-                        notitie: notitie(b) + (bedrag.isEmpty ? "" : "\nBedrag: \(bedrag)"),
+                        notitie: notitie(b) + (bedrag.isEmpty ? "" : "\nAmount: \(bedrag)"),
                         herkenner: punt.naam, zekerheid: zekerheid(o))
     }
 
     private func notitie(_ b: Postvak.Bericht) -> String {
-        "Automatisch herkend in een e-mail.\nAfzender: \(b.afzender)\nOnderwerp: \(b.onderwerp)"
+        "Detected automatically in an email.\nFrom: \(b.afzender)\nSubject: \(b.onderwerp)"
     }
 
     private func noteerOvergeslagen(_ b: Postvak.Bericht, _ reden: String) {
@@ -240,41 +239,41 @@ enum Datums {
         return nil
     }
 
-    /// Tussen gisteren en ruim een jaar vooruit. Alles daarbuiten is een verzinsel.
+    /// Between roughly a month back and a year ahead. Anything outside that is invented.
     static func redelijk(_ d: Date) -> Bool {
         d > Date().addingTimeInterval(-86400 * 31) && d < Date().addingTimeInterval(86400 * 400)
     }
 
     static func kort(_ d: Date?) -> String {
-        guard let d else { return "geen datum" }
+        guard let d else { return "no date" }
         let f = DateFormatter()
         f.locale = Locale(identifier: "nl_NL")
         f.dateFormat = "EEE d MMM, HH:mm"
         return f.string(from: d)
     }
 
-    /// Wanneer het seintje afgaat bij een uiterste datum, of nil als er geen
-    /// komt. Zowel de kaart als `Agenda.maakHerinnering` rekent hiermee: als die
-    /// twee hun eigen som maken, belooft het venster iets anders dan er gebeurt.
+    /// When the alert fires for a deadline, or nil if there is none. Both the card and
+    /// `Agenda.maakHerinnering` use this: if those two did their own arithmetic, the
+    /// window would promise something other than what happens.
     static func seintje(uiterlijk: Date?, voorsprongDagen: Int) -> Date? {
         guard let d = uiterlijk, voorsprongDagen > 0 else { return nil }
         let wek = d.addingTimeInterval(-Double(voorsprongDagen) * 86400)
         return wek > Date() ? wek : nil
     }
 
-    /// "vr 4 sep 2026, 09:00"
+    /// "Fri 4 Sep 2026, 09:00"
     static func lang(_ d: Date) -> String {
         vorm("EEE d MMM yyyy, HH:mm").string(from: d)
     }
 
-    /// "vr 4 sep 2026"
+    /// "Fri 4 Sep 2026"
     static func langDag(_ d: Date) -> String {
         vorm("EEE d MMM yyyy").string(from: d)
     }
 
-    /// Twee tijdstippen; de dag komt maar één keer terug als het dezelfde is.
+    /// Two moments; the day appears only once when it is the same day.
     static func reeks(_ begin: Date?, _ eind: Date?) -> String {
-        guard let begin else { return "geen datum" }
+        guard let begin else { return "no date" }
         guard let eind else { return lang(begin) }
         if Calendar.current.isDate(begin, inSameDayAs: eind) {
             return lang(begin) + " – " + vorm("HH:mm").string(from: eind)
@@ -297,7 +296,7 @@ enum Datums {
     }
 
     static func kortDag(_ d: Date?) -> String {
-        guard let d else { return "geen datum" }
+        guard let d else { return "no date" }
         let f = DateFormatter()
         f.locale = Locale(identifier: "nl_NL")
         f.dateFormat = "EEE d MMMM"

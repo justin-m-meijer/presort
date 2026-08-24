@@ -13,6 +13,8 @@ rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp ".build/release/$NAME" "$APP/Contents/MacOS/$NAME"
 cp "Resources/$NAME.icns" "$APP/Contents/Resources/$NAME.icns"
+# The string catalogue SwiftPM generates. Without this the app falls back to raw keys.
+cp -R ".build/release/${NAME}_${NAME}.bundle" "$APP/Contents/Resources/"
 
 cat > "$APP/Contents/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
