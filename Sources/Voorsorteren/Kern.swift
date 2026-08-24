@@ -1,9 +1,9 @@
 import Combine
 import Foundation
 
-/// Alles wat de app doet, los van waar het vandaan gevraagd wordt. Het venster
-/// en het menubalk-item praten allebei hiertegen; daarom staat het niet meer in
-/// de view. Een beurt op de achtergrond heeft namelijk geen venster nodig.
+/// Everything the app does, separated from wherever the request came from. The window and
+/// the menu bar item both talk to this, which is why it no longer lives in the view: a run
+/// in the background has no window at all.
 @MainActor
 final class Kern: ObservableObject {
     let instellingen = Instellingen()
@@ -20,7 +20,7 @@ final class Kern: ObservableObject {
     private var abonnementen = Set<AnyCancellable>()
 
     init() {
-        // De wekker volgt de instelling: verzet je hem, dan gaat hij meteen mee.
+        // The ticker follows the setting: change it and it moves along immediately.
         instellingen.$ritmeMinuten
             .removeDuplicates()
             .sink { [weak self] minuten in
@@ -29,7 +29,7 @@ final class Kern: ObservableObject {
             .store(in: &abonnementen)
     }
 
-    /// Eenmalig bij het opstarten: toegang vragen en de wekker opwinden.
+    /// Once at startup: request access and wind up the ticker.
     func begin() async {
         MeldingBezorger.gedeeld.koppel()
 
@@ -51,15 +51,15 @@ final class Kern: ObservableObject {
         }
     }
 
-    // MARK: nakijken
+    // MARK: scanning
 
     func kijkNa(vanzelf: Bool = false) async {
         guard !bezig else { return }
 
-        // Een beurt uit zichzelf mag Mail niet wakker maken: dan opent er een
-        // programma dat je bewust had afgesloten.
+        // A run started by itself must not wake Mail: that would open an application you
+        // had deliberately closed.
         if vanzelf && !Mail.draait {
-            melding = "Overgeslagen: Mail draait niet."
+            melding = "Skipped: Mail is not running."
             return
         }
 
@@ -79,17 +79,17 @@ final class Kern: ObservableObject {
         }
     }
 
-    /// De melding moet zeggen wat er is gebeurd. "3 wachten op je" terwijl ze er
-    /// al in staan is niet alleen verwarrend, het is onwaar.
+    /// The notification has to say what happened. "3 waiting for you" while they are
+    /// already filed is not merely confusing, it is untrue.
     private func kopVoorMelding(_ uit: Scanner.Uitkomst, _ zelf: ZelfGedaan) -> String {
         if zelf.erin > 0 {
-            let erin = zelf.erin == 1 ? "1 ding erin gezet" : "\(zelf.erin) dingen erin gezet"
+            let erin = zelf.erin == 1 ? "1 thing filed" : "\(zelf.erin) things filed"
             guard zelf.blijftWachten > 0 else { return erin }
-            return "\(erin), \(zelf.blijftWachten) wacht nog op je"
+            return "\(erin), \(zelf.blijftWachten) still waiting for you"
         }
         return uit.voorgesteld == 1
-            ? "Er wacht iets op je"
-            : "\(uit.voorgesteld) dingen wachten op je"
+            ? "Something is waiting for you"
+            : "\(uit.voorgesteld) things waiting for you"
     }
 
     private struct ZelfGedaan {
@@ -98,35 +98,33 @@ final class Kern: ObservableObject {
 
         var staart: String {
             guard erin > 0 || blijftWachten > 0 else { return "" }
-            var s = erin == 1 ? " 1 er zelf in gezet." : " \(erin) er zelf in gezet."
+            var s = erin == 1 ? " Filed 1 by itself." : " Filed \(erin) by itself."
             if erin == 0 { s = "" }
             if blijftWachten > 0 {
                 s += blijftWachten == 1
-                    ? " 1 was niet zeker genoeg en wacht op jou."
-                    : " \(blijftWachten) waren niet zeker genoeg en wachten op jou."
+                    ? " 1 was not confident enough and is waiting for you."
+                    : " \(blijftWachten) were not confident enough and are waiting for you."
             }
             return s
         }
     }
 
-    /// Zet er vanzelf in wat het model met "hoog" heeft bestempeld. De rest
-    /// blijft gewoon wachten: de bedoeling is dat je minder hoeft na te lopen,
-    /// niet dat je het niet meer kúnt.
+    /// Files whatever the model marked as "hoog" by itself. The rest keeps waiting: the
+    /// point is that you have less to go through, not that you no longer can.
     private func zetZelfIn(_ ids: [String]) async -> ZelfGedaan {
         var uitkomst = ZelfGedaan()
         for id in ids {
             guard let v = wachtrij.items.first(where: { $0.id == id }), v.status == .open else {
                 continue
             }
-            // Geen zekerheid opgegeven telt als niet zeker. Wie zwijgt, stemt
-            // hier niet toe.
+            // No confidence given counts as not confident. Silence is not consent here.
             guard v.zekerheid == "hoog" else {
                 uitkomst.blijftWachten += 1
                 continue
             }
             await keur(v, ja: true)
-            // `keur` kan alsnog stuklopen of op "stond er al" uitkomen; alleen
-            // wat echt is aangemaakt telt mee.
+            // `keur` can still fail or land on "already there"; only what was actually
+            // created counts.
             if wachtrij.items.first(where: { $0.id == id })?.status == .goedgekeurd {
                 uitkomst.erin += 1
             }
@@ -134,7 +132,7 @@ final class Kern: ObservableObject {
         return uitkomst
     }
 
-    // MARK: besluiten
+    // MARK: decisions
 
     func keur(_ v: Voorstel, ja: Bool) async {
         guard ja else {
@@ -147,7 +145,7 @@ final class Kern: ObservableObject {
             if v.soort == .afspraak {
                 guard let b = v.begin, let e = v.eind else { return }
                 if await agenda.heeftAfspraak(titel: v.titel, begin: b) {
-                    wachtrij.werkBij(v.id) { $0.status = .geweigerd; $0.fout = "stond er al" }
+                    wachtrij.werkBij(v.id) { $0.status = .geweigerd; $0.fout = "already there" }
                     return
                 }
                 id = try await agenda.maakAfspraak(titel: v.titel, begin: b, eind: e,
@@ -169,7 +167,7 @@ final class Kern: ObservableObject {
         do {
             if v.soort == .afspraak { try await agenda.verwijder(afspraakId: v.itemId) }
             else { try await agenda.verwijder(herinneringId: v.itemId) }
-            wachtrij.werkBij(v.id) { $0.status = .geweigerd; $0.fout = "teruggedraaid" }
+            wachtrij.werkBij(v.id) { $0.status = .geweigerd; $0.fout = "undone" }
         } catch {
             melding = error.localizedDescription
         }

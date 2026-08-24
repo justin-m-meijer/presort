@@ -3,9 +3,9 @@ import Foundation
 import ServiceManagement
 import UserNotifications
 
-/// Kijkt elke halve minuut of het tijd is, in plaats van één timer die precies
-/// op het interval afgaat. Zo'n timer slaat een beurt over als de Mac heeft
-/// geslapen -- en een laptop slaapt vaker dan hij aan staat.
+/// Checks every half minute whether it is time, rather than one timer that fires exactly
+/// on the interval. Such a timer skips a turn when the Mac has slept -- and a laptop
+/// sleeps more often than it is awake.
 @MainActor
 final class Wekker: ObservableObject {
     @Published private(set) var volgende: Date?
@@ -14,7 +14,7 @@ final class Wekker: ObservableObject {
     private var minuten = 0
     private var taak: (() async -> Void)?
 
-    /// Zet de wekker. `minuten` op 0 zet hem uit.
+    /// Sets the ticker. `minuten` at 0 turns it off.
     func zet(elke minuten: Int, doe: @escaping () async -> Void) {
         self.minuten = minuten
         self.taak = doe
@@ -34,8 +34,8 @@ final class Wekker: ObservableObject {
         tik = t
     }
 
-    /// Na een handmatige beurt begint het wachten opnieuw: anders staat de app
-    /// twee minuten later alweer in je postvak.
+    /// After a manual run the waiting starts over: otherwise the app is back in your
+    /// mailbox two minutes later.
     func schuifOp() {
         guard minuten > 0 else { return }
         volgende = Date().addingTimeInterval(Double(minuten) * 60)
@@ -48,11 +48,11 @@ final class Wekker: ObservableObject {
     }
 }
 
-/// Meldingen zijn de reden dat de app op de achtergrond mag draaien: zonder
-/// bericht zou je alsnog zelf moeten gaan kijken of er iets gevonden is.
+/// Notifications are the reason the app is allowed to run in the background: without one
+/// you would still have to go and look whether anything was found.
 enum Meldingen {
-    /// Zonder bundel-id is er geen meldingscentrum -- dat gebeurt als het
-    /// programma los wordt gestart in plaats van uit Voorsorteren.app.
+    /// Without a bundle id there is no notification centre -- which happens when the
+    /// binary is launched on its own instead of from Voorsorteren.app.
     private static var kan: Bool { Bundle.main.bundleIdentifier != nil }
 
     static func vraagToestemming() async {
@@ -72,9 +72,8 @@ enum Meldingen {
     }
 }
 
-/// Houdt vast hoe je het venster weer open krijgt. Nodig omdat een klik op een
-/// melding buiten elk venster om binnenkomt, en SwiftUI zijn `openWindow`
-/// alleen binnen een view uitdeelt.
+/// Holds on to how the window can be reopened. Needed because a click on a notification
+/// arrives outside any window, and SwiftUI only hands out `openWindow` inside a view.
 @MainActor
 enum Vensters {
     nonisolated static let hoofd = "hoofd"
@@ -89,8 +88,8 @@ enum Vensters {
     }
 }
 
-/// Zorgt dat een melding ook verschijnt terwijl de app voor staat, en dat een
-/// klik erop het venster opent.
+/// Makes a notification appear even while the app is in front, and makes a click on it
+/// open the window.
 final class MeldingBezorger: NSObject, UNUserNotificationCenterDelegate {
     static let gedeeld = MeldingBezorger()
 
@@ -114,15 +113,15 @@ final class MeldingBezorger: NSObject, UNUserNotificationCenterDelegate {
     }
 }
 
-/// Vanzelf nakijken heeft weinig zin als de app pas draait nadat je hem zelf
-/// hebt gestart. Lukt het aanzetten niet, dan zegt dit waarom.
+/// Checking by itself is not much use if the app only runs after you have started it.
+/// If enabling that fails, this says why.
 @MainActor
 enum Inloggen {
     static var isAan: Bool {
         SMAppService.mainApp.status == .enabled
     }
 
-    /// Geeft nil terug als het gelukt is, anders een zin voor de gebruiker.
+    /// Returns nil on success, otherwise a sentence for the user.
     static func zet(_ aan: Bool) -> String? {
         do {
             if aan {
@@ -132,14 +131,14 @@ enum Inloggen {
             }
             return nil
         } catch {
-            return "Starten bij inloggen lukte niet. Dat vraagt meestal dat de app in "
-                 + "de map Programma's staat. (\(error.localizedDescription))"
+            return "Opening at login did not work. That usually requires the app to be in "
+                 + "the Applications folder. (\(error.localizedDescription))"
         }
     }
 }
 
-/// Draait Mail? Een automatische beurt mag Mail niet zelf opstarten: dan opent
-/// er 's nachts ineens een programma dat je dicht had gezet.
+/// Is Mail running? An automatic run must not start Mail itself: that would suddenly
+/// open an application at night that you had deliberately closed.
 enum Mail {
     static var draait: Bool {
         !NSRunningApplication.runningApplications(withBundleIdentifier: "com.apple.mail").isEmpty

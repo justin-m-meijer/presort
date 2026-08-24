@@ -1,7 +1,7 @@
 import Foundation
 
-/// Hoe ver de app terugkijkt in het postvak. Vaste stappen in plaats van een
-/// vrij getal: bij "hoe ver terug" denk je in weken en maanden, niet in dagen.
+/// How far back the app looks in the mailbox. Fixed steps rather than a free number:
+/// "how far back" is something you think about in weeks and months, not in days.
 enum Terugkijken: Int, CaseIterable, Identifiable {
     case week = 7
     case tweeWeken = 14
@@ -14,24 +14,24 @@ enum Terugkijken: Int, CaseIterable, Identifiable {
 
     var naam: String {
         switch self {
-        case .week:      return "Afgelopen 7 dagen"
-        case .tweeWeken: return "Afgelopen 14 dagen"
-        case .maand:     return "Afgelopen maand"
-        case .kwartaal:  return "Afgelopen kwartaal"
-        case .halfJaar:  return "Afgelopen half jaar"
-        case .jaar:      return "Afgelopen jaar"
+        case .week:      return "Last 7 days"
+        case .tweeWeken: return "Last 14 days"
+        case .maand:     return "Last month"
+        case .kwartaal:  return "Last quarter"
+        case .halfJaar:  return "Last six months"
+        case .jaar:      return "Last year"
         }
     }
 
-    /// Kort genoeg voor de knoppenbalk.
+    /// Short enough for the toolbar.
     var kort: String {
         switch self {
-        case .week: return "7 dagen"
-        case .tweeWeken: return "14 dagen"
-        case .maand: return "1 maand"
-        case .kwartaal: return "kwartaal"
-        case .halfJaar: return "half jaar"
-        case .jaar: return "jaar"
+        case .week: return "7 days"
+        case .tweeWeken: return "14 days"
+        case .maand: return "1 month"
+        case .kwartaal: return "quarter"
+        case .halfJaar: return "6 months"
+        case .jaar: return "year"
         }
     }
 
@@ -40,8 +40,8 @@ enum Terugkijken: Int, CaseIterable, Identifiable {
     }
 }
 
-/// Hoe vaak de app uit zichzelf gaat kijken. Ook hier vaste stappen: het gaat
-/// om "een paar keer per dag" of "zodra er iets binnenkomt", niet om minuten.
+/// How often the app checks by itself. Fixed steps here too: this is about "a few times
+/// a day" or "as soon as something arrives", not about minutes.
 enum Ritme: Int, CaseIterable, Identifiable {
     case uit = 0
     case kwartier = 15
@@ -54,12 +54,12 @@ enum Ritme: Int, CaseIterable, Identifiable {
 
     var naam: String {
         switch self {
-        case .uit:      return "Alleen als ik erom vraag"
-        case .kwartier: return "Elk kwartier"
-        case .halfUur:  return "Elk half uur"
-        case .uur:      return "Elk uur"
-        case .vierUur:  return "Om de vier uur"
-        case .dag:      return "Twee keer per dag"
+        case .uit:      return "Only when I ask"
+        case .kwartier: return "Every 15 minutes"
+        case .halfUur:  return "Every half hour"
+        case .uur:      return "Every hour"
+        case .vierUur:  return "Every four hours"
+        case .dag:      return "Twice a day"
         }
     }
 
@@ -68,9 +68,8 @@ enum Ritme: Int, CaseIterable, Identifiable {
     }
 }
 
-/// Hoeveel eerder je een seintje krijgt dan de uiterste datum. Een herinnering
-/// die op de laatste dag afgaat is meestal te laat: een pakket terugsturen kost
-/// een rit naar het afhaalpunt.
+/// How much earlier than the deadline you get nudged. A reminder that fires on the final
+/// day is usually too late: getting a parcel back means a trip to a drop-off point.
 enum Voorsprong: Int, CaseIterable, Identifiable {
     case opDeDagZelf = 0
     case eenDag = 1
@@ -82,11 +81,11 @@ enum Voorsprong: Int, CaseIterable, Identifiable {
 
     var naam: String {
         switch self {
-        case .opDeDagZelf: return "Op de dag zelf"
-        case .eenDag:      return "Een dag van tevoren"
-        case .tweeDagen:   return "Twee dagen van tevoren"
-        case .drieDagen:   return "Drie dagen van tevoren"
-        case .week:        return "Een week van tevoren"
+        case .opDeDagZelf: return "On the day itself"
+        case .eenDag:      return "One day early"
+        case .tweeDagen:   return "Two days early"
+        case .drieDagen:   return "Three days early"
+        case .week:        return "One week early"
         }
     }
 
@@ -104,7 +103,7 @@ final class Instellingen: ObservableObject {
     @Published var postvak: String { didSet { bewaar("postvak", postvak) } }
     @Published var dagen: Int { didSet { bewaar("dagen", String(dagen)) } }
 
-    /// Dezelfde waarde, maar als keuze uit de lijst.
+    /// The same value, but as a choice from the list.
     var periode: Terugkijken {
         get { Terugkijken.dichtstbij(dagen) }
         set { dagen = newValue.rawValue }
@@ -147,7 +146,7 @@ final class Instellingen: ObservableObject {
         meldingen = lees("meldingen", "1") == "1"
     }
 
-    /// Vrije functie: in init() mag nog geen methode op self worden aangeroepen.
+    /// Free function: init() may not call a method on self yet.
     private static func lezer(_ k: String, _ standaard: String) -> String {
         UserDefaults.standard.string(forKey: k) ?? standaard
     }
