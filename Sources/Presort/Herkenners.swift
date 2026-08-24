@@ -28,7 +28,9 @@ struct Herkenner: Identifiable, Codable, Hashable {
     /// start and an end, a reminder has a final date. Anything the user invents falls into
     /// one of the two.
     enum Vorm: String, Codable, CaseIterable, Identifiable {
-        case afspraak, herinnering
+        // Spelled out: these end up in herkenners.json for the user's own points.
+        case afspraak = "afspraak"
+        case herinnering = "herinnering"
         var id: String { rawValue }
         var naam: String { t(self == .afspraak ? "shape.event" : "shape.reminder") }
         var soort: Voorstel.Soort { self == .afspraak ? .afspraak : .herinnering }
@@ -41,6 +43,18 @@ struct Herkenner: Identifiable, Codable, Hashable {
     var aan: Bool
     var instructie: String
     var eigen: Bool = false
+
+    /// The field names in `herkenners.json`, spelled out so a rename here cannot throw
+    /// away the points somebody wrote themselves.
+    enum CodingKeys: String, CodingKey {
+        case id = "id"
+        case naam = "naam"
+        case uitleg = "uitleg"
+        case vorm = "vorm"
+        case aan = "aan"
+        case instructie = "instructie"
+        case eigen = "eigen"
+    }
 }
 
 extension Herkenner {
@@ -120,11 +134,21 @@ final class Herkenners: ObservableObject {
     private struct Aanpassing: Codable {
         var aan: Bool?
         var instructie: String?
+
+        enum CodingKeys: String, CodingKey {
+            case aan = "aan"
+            case instructie = "instructie"
+        }
     }
 
     private struct Schijf: Codable {
         var aanpassingen: [String: Aanpassing] = [:]
         var eigen: [Herkenner] = []
+
+        enum CodingKeys: String, CodingKey {
+            case aanpassingen = "aanpassingen"
+            case eigen = "eigen"
+        }
     }
 
     private var schijf = Schijf()

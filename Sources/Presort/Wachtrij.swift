@@ -4,11 +4,19 @@ import Foundation
 /// proposal -- it puts a status next to it, so what was proposed stays visible, including
 /// the things you threw away.
 struct Voorstel: Identifiable, Codable, Hashable {
-    enum Soort: String, Codable { case afspraak, herinnering, overgeslagen }
-    /// The rawValue stays as it is: that is how it sits in the stored file, and renaming
-    /// it would make every existing proposal unreadable. For the screen there is `getoond`.
+    /// The rawValues are written to disk, so they are spelled out rather than derived from
+    /// the case names: renaming a case must never make an existing file unreadable.
+    enum Soort: String, Codable {
+        case afspraak = "afspraak"
+        case herinnering = "herinnering"
+        case overgeslagen = "overgeslagen"
+    }
+    /// Spelled out for the same reason. For the screen there is `getoond`.
     enum Status: String, Codable {
-        case open, goedgekeurd, geweigerd, mislukt
+        case open = "open"
+        case goedgekeurd = "goedgekeurd"
+        case geweigerd = "geweigerd"
+        case mislukt = "mislukt"
 
         /// What the user reads. Kept apart from the stored value on purpose.
         var getoond: String {
@@ -49,6 +57,29 @@ struct Voorstel: Identifiable, Codable, Hashable {
     /// How certain the model said it was: "hoog", "midden" or "laag". Optional for the
     /// same reason. Only "hoog" may be filed automatically.
     var zekerheid: String?
+
+    /// The names of the fields in `voorstellen.json`, spelled out so that renaming a
+    /// property here cannot silently orphan everything the user has already collected.
+    enum CodingKeys: String, CodingKey {
+        case id = "id"
+        case tijd = "tijd"
+        case soort = "soort"
+        case status = "status"
+        case afzender = "afzender"
+        case onderwerp = "onderwerp"
+        case titel = "titel"
+        case begin = "begin"
+        case eind = "eind"
+        case locatie = "locatie"
+        case uiterlijk = "uiterlijk"
+        case bedrag = "bedrag"
+        case notitie = "notitie"
+        case reden = "reden"
+        case itemId = "itemId"
+        case fout = "fout"
+        case herkenner = "herkenner"
+        case zekerheid = "zekerheid"
+    }
 }
 
 @MainActor
@@ -135,6 +166,11 @@ final class Wachtrij: ObservableObject {
     private struct Schijf: Codable {
         var items: [Voorstel]
         var geziene: [String]
+
+        enum CodingKeys: String, CodingKey {
+            case items = "items"
+            case geziene = "geziene"
+        }
     }
 
     private func bewaar() {
