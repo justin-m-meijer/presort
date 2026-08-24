@@ -1,4 +1,4 @@
-# Resort
+# Presort
 
 A small macOS app that reads your inbox with a language model **you** run, and turns
 what it finds into calendar entries and reminders.
