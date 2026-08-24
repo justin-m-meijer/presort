@@ -293,7 +293,7 @@ struct WhatLands: View {
                                ? "card.intoCalendar" : "card.intoList"), name)
     }
 
-    /// The same calculation `Agenda` will do later, so that nothing shown here fails to
+    /// The same calculation `CalendarStore` will do later, so that nothing shown here fails to
     /// happen there.
     private var alert: String {
         guard proposal.dueDate != nil else { return t("alert.noneNoDate") }

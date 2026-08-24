@@ -55,11 +55,11 @@
 
 /* Calendar, login and run messages. */
 
-"agenda.error.noAccess" = "No access to %@. Enable it in System Settings › Privacy & Security.";
-"agenda.error.noSource" = "No account found to create the list in.";
-"agenda.error.saveFailed" = "Saving failed. %@";
-"agenda.permission.calendar" = "Calendar";
-"agenda.permission.reminders" = "Reminders";
+"calendar.error.noAccess" = "No access to %@. Enable it in System Settings › Privacy & Security.";
+"calendar.error.noSource" = "No account found to create the list in.";
+"calendar.error.saveFailed" = "Saving failed. %@";
+"calendar.permission.calendar" = "Calendar";
+"calendar.permission.reminders" = "Reminders";
 "login.failed" = "Opening at login did not work. That usually requires the app to be in the Applications folder. (%@)";
 "run.mailNotRunning" = "Skipped: Mail is not running.";
 "notify.filed.one" = "1 thing filed";

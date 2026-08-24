@@ -52,11 +52,11 @@
 
 /* Calendar, login and run messages. */
 
-"agenda.error.noAccess" = "Kein Zugriff auf %@. Aktiviere das in den Systemeinstellungen › Datenschutz und Sicherheit.";
-"agenda.error.noSource" = "Kein Konto gefunden, in dem die Liste angelegt werden kann.";
-"agenda.error.saveFailed" = "Das Speichern ist fehlgeschlagen. %@";
-"agenda.permission.calendar" = "Kalender";
-"agenda.permission.reminders" = "Erinnerungen";
+"calendar.error.noAccess" = "Kein Zugriff auf %@. Aktiviere das in den Systemeinstellungen › Datenschutz und Sicherheit.";
+"calendar.error.noSource" = "Kein Konto gefunden, in dem die Liste angelegt werden kann.";
+"calendar.error.saveFailed" = "Das Speichern ist fehlgeschlagen. %@";
+"calendar.permission.calendar" = "Kalender";
+"calendar.permission.reminders" = "Erinnerungen";
 "login.failed" = "Das Öffnen beim Anmelden hat nicht geklappt. Dafür muss die App meist im Ordner „Programme“ liegen. (%@)";
 "run.mailNotRunning" = "Übersprungen: Mail läuft nicht.";
 "notify.filed.one" = "1 Sache eingetragen";

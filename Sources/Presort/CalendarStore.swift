@@ -18,19 +18,19 @@ actor CalendarStore {
         var errorDescription: String? {
             switch self {
             case .noAccess(let what):
-                return String(format: t("agenda.error.noAccess"), what)
-            case .noSource: return t("agenda.error.noSource")
-            case .saveFailed(let m): return String(format: t("agenda.error.saveFailed"), m)
+                return String(format: t("calendar.error.noAccess"), what)
+            case .noSource: return t("calendar.error.noSource")
+            case .saveFailed(let m): return String(format: t("calendar.error.saveFailed"), m)
             }
         }
     }
 
     func askAccess() async throws {
         if try await store.requestFullAccessToEvents() == false {
-            throw Problem.noAccess(t("agenda.permission.calendar"))
+            throw Problem.noAccess(t("calendar.permission.calendar"))
         }
         if try await store.requestFullAccessToReminders() == false {
-            throw Problem.noAccess(t("agenda.permission.reminders"))
+            throw Problem.noAccess(t("calendar.permission.reminders"))
         }
     }
 

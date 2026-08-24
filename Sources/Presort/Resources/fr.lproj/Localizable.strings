@@ -52,11 +52,11 @@
 
 /* Calendar, login and run messages. */
 
-"agenda.error.noAccess" = "Pas d’accès à %@. Activez-le dans Réglages Système › Confidentialité et sécurité.";
-"agenda.error.noSource" = "Aucun compte trouvé pour y créer la liste.";
-"agenda.error.saveFailed" = "L’enregistrement a échoué. %@";
-"agenda.permission.calendar" = "Calendrier";
-"agenda.permission.reminders" = "Rappels";
+"calendar.error.noAccess" = "Pas d’accès à %@. Activez-le dans Réglages Système › Confidentialité et sécurité.";
+"calendar.error.noSource" = "Aucun compte trouvé pour y créer la liste.";
+"calendar.error.saveFailed" = "L’enregistrement a échoué. %@";
+"calendar.permission.calendar" = "Calendrier";
+"calendar.permission.reminders" = "Rappels";
 "login.failed" = "L’ouverture à la connexion a échoué. Pour cela, l’app doit généralement se trouver dans le dossier Applications. (%@)";
 "run.mailNotRunning" = "Ignoré : Mail n’est pas lancé.";
 "notify.filed.one" = "1 élément classé";

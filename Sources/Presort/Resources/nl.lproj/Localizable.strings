@@ -52,11 +52,11 @@
 
 /* Calendar, login and run messages. */
 
-"agenda.error.noAccess" = "Geen toegang tot %@. Zet dat aan in Systeeminstellingen › Privacy en beveiliging.";
-"agenda.error.noSource" = "Geen account gevonden om de lijst in aan te maken.";
-"agenda.error.saveFailed" = "Opslaan is mislukt. %@";
-"agenda.permission.calendar" = "Agenda";
-"agenda.permission.reminders" = "Herinneringen";
+"calendar.error.noAccess" = "Geen toegang tot %@. Zet dat aan in Systeeminstellingen › Privacy en beveiliging.";
+"calendar.error.noSource" = "Geen account gevonden om de lijst in aan te maken.";
+"calendar.error.saveFailed" = "Opslaan is mislukt. %@";
+"calendar.permission.calendar" = "Agenda";
+"calendar.permission.reminders" = "Herinneringen";
 "login.failed" = "Openen bij inloggen lukte niet. Daarvoor moet de app meestal in de map Programma’s staan. (%@)";
 "run.mailNotRunning" = "Overgeslagen: Mail draait niet.";
 "notify.filed.one" = "1 ding weggezet";
