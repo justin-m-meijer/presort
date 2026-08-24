@@ -122,3 +122,91 @@
 "mail.error.noAnswer" = "Mail n’a pas répondu. %@";
 "mail.error.unknown" = "erreur inconnue";
 "mail.truncated" = "\n… (tronqué)";
+
+/* The main window and the menu bar. */
+
+"window.waiting" = "%d en attente de votre décision";
+"toolbar.lookbackHelp" = "Jusqu’où l’app remonte dans votre boîte aux lettres";
+"button.checkNow" = "Vérifier maintenant";
+"button.settings" = "Réglages";
+"section.waiting" = "En attente de votre décision";
+"empty.waiting" = "Rien en attente. Ce qui a été trouvé a été traité.";
+"section.handled" = "Traité";
+"section.skipped" = "Rien trouvé là-dedans";
+"menu.nothingWaiting" = "Rien en attente";
+"menu.waiting.one" = "1 en attente de votre décision";
+"menu.againAt" = "%1$@ · à nouveau à %2$@";
+"menu.checking" = "Vérification…";
+"button.fileIt" = "Classer";
+"button.discard" = "Écarter";
+"menu.openWindow" = "Ouvrir la fenêtre";
+"menu.settings" = "Réglages…";
+"menu.quit" = "Quitter Presort";
+"badge.event" = "Rendez-vous";
+"badge.reminder" = "Rappel";
+
+/* The proposal card: what will actually be written. */
+
+"card.when" = "Quand";
+"card.where" = "Où";
+"card.due" = "Échéance";
+"card.alert" = "Alerte";
+"card.amount" = "Montant";
+"card.note" = "Note";
+"card.intoCalendar" = "IRA DANS VOTRE CALENDRIER « %@ »";
+"card.intoList" = "IRA DANS VOTRE LISTE « %@ »";
+"alert.noneNoDate" = "aucune, il n’y a pas de date";
+"alert.noneNoLead" = "aucune, vous n’avez demandé aucun délai d’avance";
+"alert.nonePassed" = "aucune, cette date est passée";
+"alert.at" = "%1$@  (%2$d jours avant)";
+"button.undo" = "Annuler";
+"setup.title" = "Pas encore configuré";
+"setup.body" = "Presort dialogue avec tout modèle parlant le format OpenAI — Ollama sur ce Mac, un serveur chez vous, ou un service hébergé. Renseignez l’adresse et le nom du modèle dans les Réglages.";
+
+/* The settings window. */
+
+"tab.model" = "Modèle";
+"tab.mail" = "Courrier";
+"tab.watch" = "Ce qu’il faut chercher";
+"tab.auto" = "Automatique";
+"tab.create" = "Création";
+"auto.rhythm" = "Vérifier automatiquement";
+"auto.notify" = "Me prévenir quand quelque chose est trouvé";
+"auto.login" = "Ouvrir à la connexion";
+"auto.note" = "L’app reste dans la barre des menus et vérifie d’elle-même à ces moments-là. Si Mail n’est pas lancé, elle passe son tour — rien n’est jamais lancé à votre place.";
+"detectors.add" = "Ajouter un point à vous";
+"detectors.removeOnlyOwn" = "Seuls vos propres points peuvent être supprimés";
+"detectors.onCount" = "%d activés";
+"detectors.promptHeading" = "Ce que l’app dit au modèle à ce sujet";
+"detectors.formNote" = "Le formulaire est fixe et non modifiable. L’app s’appuie dessus : la longueur des titres est vérifiée, et les dates aussi, pour savoir si elles ont été inventées. Qui peut réécrire le formulaire supprime ce contrôle.";
+"detectors.pickOne" = "Choisissez un point à gauche.";
+"detectors.nameField" = "Nom";
+"detectors.summaryField" = "Courte description";
+"detectors.becomes" = "Devient un";
+"detectors.builtinSub" = "%1$@ · devient un %2$@";
+"detectors.restore" = "Rétablir le texte par défaut";
+"detectors.remove" = "Supprimer ce point";
+"detectors.costNote" = "Chaque point activé représente une question de plus par message.";
+"detectors.builtinNote" = "Les points intégrés peuvent être désactivés et réécrits, mais pas supprimés.";
+"detectors.removeNamed" = "Supprimer « %@ »";
+"model.address" = "Adresse";
+"model.name" = "Nom du modèle";
+"model.key" = "Clé (peut être vide)";
+"model.note" = "N’importe quel point d’accès parlant le format OpenAI convient : Ollama, vLLM, LiteLLM ou un service hébergé. Le modèle ne reçoit aucun outil — du texte en entrée, un formulaire en sortie.";
+"mail.account" = "Compte dans Mail";
+"mail.mailbox" = "Boîte aux lettres";
+"mail.lookback" = "Remonter";
+"mail.lookbackNote" = "Les messages déjà vus sont ignorés : une période généreuse ne coûte du temps qu’au premier passage.";
+"mail.recheck" = "Revérifier tout le courrier…";
+"mail.recheckNote" = "L’app ignore ce qu’elle a déjà examiné. Si vous avez modifié une description dans « Ce qu’il faut chercher », vous ne le verrez qu’à l’arrivée de nouveaux messages. Ceci renvoie tout au modèle. Actuellement, %d messages sont marqués comme examinés.";
+"mail.recheckTitle" = "Tout revérifier ?";
+"mail.recheckConfirm" = "Revérifier";
+"mail.recheckCancel" = "Laisser tomber";
+"mail.recheckMessage" = "Le prochain passage renverra au modèle tout le courrier de la période choisie. Cela prend du temps, et vous pourriez revoir des propositions déjà écartées. Ce qui existe déjà reste en place.";
+"create.calendarName" = "Calendrier et liste dédiés";
+"create.onlyHigh" = "Seulement quand la confiance est élevée";
+"create.auto" = "Classer automatiquement, sans demander";
+"create.autoNote" = "Désactivé : l’app propose et vous appuyez sur le bouton. Activé : ce que le modèle qualifie de « hoog » est classé directement, le reste attend. Cela arrive dans votre calendrier et votre liste dédiés, et sous « Traité » chaque élément a un bouton pour annuler.";
+"create.warnMe" = "Me prévenir";
+"create.warnNote" = "Avec une échéance, vous êtes alerté ce nombre de jours à l’avance. Le rappel conserve la vraie date — vous êtes simplement sollicité plus tôt, car le dernier jour il est souvent trop tard pour renvoyer quelque chose.";
+"create.scopeNote" = "Ce que l’app crée va dans un calendrier et une liste de rappels dédiés. Vos calendriers existants sont lus mais jamais modifiés.";

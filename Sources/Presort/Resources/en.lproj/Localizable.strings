@@ -125,3 +125,91 @@
 "mail.error.noAnswer" = "Mail did not answer. %@";
 "mail.error.unknown" = "unknown error";
 "mail.truncated" = "\n… (truncated)";
+
+/* The main window and the menu bar. */
+
+"window.waiting" = "%d waiting for you";
+"toolbar.lookbackHelp" = "How far back the app looks in your mailbox";
+"button.checkNow" = "Check now";
+"button.settings" = "Settings";
+"section.waiting" = "Waiting for you";
+"empty.waiting" = "Nothing waiting. What was found has been dealt with.";
+"section.handled" = "Handled";
+"section.skipped" = "Nothing found in these";
+"menu.nothingWaiting" = "Nothing waiting";
+"menu.waiting.one" = "1 waiting for you";
+"menu.againAt" = "%1$@ · again at %2$@";
+"menu.checking" = "Checking…";
+"button.fileIt" = "File it";
+"button.discard" = "Discard";
+"menu.openWindow" = "Open window";
+"menu.settings" = "Settings…";
+"menu.quit" = "Quit Presort";
+"badge.event" = "Appointment";
+"badge.reminder" = "Reminder";
+
+/* The proposal card: what will actually be written. */
+
+"card.when" = "When";
+"card.where" = "Where";
+"card.due" = "Due";
+"card.alert" = "Alert";
+"card.amount" = "Amount";
+"card.note" = "Note";
+"card.intoCalendar" = "GOES INTO YOUR CALENDAR ‘%@’";
+"card.intoList" = "GOES INTO YOUR LIST ‘%@’";
+"alert.noneNoDate" = "none, there is no date";
+"alert.noneNoLead" = "none, you asked for no lead time";
+"alert.nonePassed" = "none, that date has passed";
+"alert.at" = "%1$@  (%2$d days earlier)";
+"button.undo" = "Undo";
+"setup.title" = "Not set up yet";
+"setup.body" = "Presort talks to any model that speaks the OpenAI shape — Ollama on this Mac, a server in your house, or a hosted service. Fill in the address and the model name under Settings.";
+
+/* The settings window. */
+
+"tab.model" = "Model";
+"tab.mail" = "Mail";
+"tab.watch" = "What to look for";
+"tab.auto" = "By itself";
+"tab.create" = "Creating";
+"auto.rhythm" = "Check by itself";
+"auto.notify" = "Let me know when something is found";
+"auto.login" = "Open at login";
+"auto.note" = "The app stays in the menu bar and checks by itself at those times. If Mail is not running at that moment it skips the turn — nothing is ever started on your behalf.";
+"detectors.add" = "Add a point of your own";
+"detectors.removeOnlyOwn" = "Only your own points can be removed";
+"detectors.onCount" = "%d on";
+"detectors.promptHeading" = "What the app says to the model about this";
+"detectors.formNote" = "The form is fixed and cannot be edited. The app depends on it: titles are checked for length, dates for whether they were invented. Anyone allowed to rewrite the form writes that check away.";
+"detectors.pickOne" = "Pick a point on the left.";
+"detectors.nameField" = "Name";
+"detectors.summaryField" = "Short description";
+"detectors.becomes" = "Becomes";
+"detectors.builtinSub" = "%1$@ · becomes: %2$@";
+"detectors.restore" = "Restore the default text";
+"detectors.remove" = "Remove this point";
+"detectors.costNote" = "Every point that is on means one extra question per message.";
+"detectors.builtinNote" = "Built-in points can be switched off and rewritten, but not removed.";
+"detectors.removeNamed" = "Remove ‘%@’";
+"model.address" = "Address";
+"model.name" = "Model name";
+"model.key" = "Key (may be empty)";
+"model.note" = "Any endpoint that speaks the OpenAI shape works: Ollama, vLLM, LiteLLM or a hosted service. The model is handed no tools — text in, a form out.";
+"mail.account" = "Account in Mail";
+"mail.mailbox" = "Mailbox";
+"mail.lookback" = "Look back";
+"mail.lookbackNote" = "Messages you have already seen are skipped, so a generous period only costs time the first run.";
+"mail.recheck" = "Check all mail again…";
+"mail.recheckNote" = "The app skips whatever it has already checked. If you adjusted a description under ‘What to look for’, you will not notice until new mail arrives. This sends everything past the model again. %d messages are currently marked as checked.";
+"mail.recheckTitle" = "Check everything again?";
+"mail.recheckConfirm" = "Check again";
+"mail.recheckCancel" = "Never mind";
+"mail.recheckMessage" = "The next run sends all mail from the chosen period past the model again. That takes time, and you may see proposals you already dismissed. Whatever is already there stays.";
+"create.calendarName" = "Own calendar and list";
+"create.onlyHigh" = "Only when confidence is high";
+"create.auto" = "File them by itself, without asking";
+"create.autoNote" = "Off: the app proposes and you press the button. On: whatever the model calls ‘hoog’ goes straight in, the rest keeps waiting. It lands in your own calendar and list, and under ‘Handled’ every item has a button to undo it.";
+"create.warnMe" = "Warn me";
+"create.warnNote" = "With a deadline you get nudged that many days beforehand. The reminder keeps the real date — you are simply prodded earlier, because on the final day sending something back is usually no longer possible.";
+"create.scopeNote" = "What the app creates goes into a calendar and a reminder list of its own. Your existing calendars are read but never changed.";

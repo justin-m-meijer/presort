@@ -122,3 +122,91 @@
 "mail.error.noAnswer" = "Mail gaf geen antwoord. %@";
 "mail.error.unknown" = "onbekende fout";
 "mail.truncated" = "\n… (afgekapt)";
+
+/* The main window and the menu bar. */
+
+"window.waiting" = "%d wachten op je";
+"toolbar.lookbackHelp" = "Hoe ver de app terugkijkt in je postvak";
+"button.checkNow" = "Nu nakijken";
+"button.settings" = "Instellingen";
+"section.waiting" = "Wacht op jou";
+"empty.waiting" = "Niets in de wacht. Wat er gevonden is, is afgehandeld.";
+"section.handled" = "Afgehandeld";
+"section.skipped" = "Hierin niets gevonden";
+"menu.nothingWaiting" = "Niets in de wacht";
+"menu.waiting.one" = "1 wacht op je";
+"menu.againAt" = "%1$@ · weer om %2$@";
+"menu.checking" = "Bezig met nakijken…";
+"button.fileIt" = "Zet erin";
+"button.discard" = "Weg ermee";
+"menu.openWindow" = "Venster openen";
+"menu.settings" = "Instellingen…";
+"menu.quit" = "Presort afsluiten";
+"badge.event" = "Afspraak";
+"badge.reminder" = "Herinnering";
+
+/* The proposal card: what will actually be written. */
+
+"card.when" = "Wanneer";
+"card.where" = "Waar";
+"card.due" = "Uiterlijk";
+"card.alert" = "Seintje";
+"card.amount" = "Bedrag";
+"card.note" = "Notitie";
+"card.intoCalendar" = "KOMT IN JE AGENDA ‘%@’";
+"card.intoList" = "KOMT IN JE LIJST ‘%@’";
+"alert.noneNoDate" = "geen, er is geen datum";
+"alert.noneNoLead" = "geen, je hebt om geen voorsprong gevraagd";
+"alert.nonePassed" = "geen, die datum is voorbij";
+"alert.at" = "%1$@  (%2$d dagen eerder)";
+"button.undo" = "Terugdraaien";
+"setup.title" = "Nog niet ingericht";
+"setup.body" = "Presort praat met elk model dat de OpenAI-vorm spreekt — Ollama op deze Mac, een server bij je thuis, of een dienst elders. Vul het adres en de modelnaam in bij Instellingen.";
+
+/* The settings window. */
+
+"tab.model" = "Model";
+"tab.mail" = "Post";
+"tab.watch" = "Waar op letten";
+"tab.auto" = "Vanzelf";
+"tab.create" = "Aanmaken";
+"auto.rhythm" = "Vanzelf nakijken";
+"auto.notify" = "Laat het weten als er iets gevonden is";
+"auto.login" = "Openen bij inloggen";
+"auto.note" = "De app blijft in de menubalk staan en kijkt op die momenten vanzelf na. Draait Mail dan niet, dan slaat hij de beurt over — er wordt nooit iets voor je gestart.";
+"detectors.add" = "Een eigen punt toevoegen";
+"detectors.removeOnlyOwn" = "Alleen eigen punten kunnen weg";
+"detectors.onCount" = "%d aan";
+"detectors.promptHeading" = "Wat de app hierover tegen het model zegt";
+"detectors.formNote" = "Het formulier ligt vast en is niet te bewerken. De app leunt erop: titels worden op lengte gecontroleerd, datums op of ze verzonnen zijn. Wie het formulier mag herschrijven, schrijft die controle weg.";
+"detectors.pickOne" = "Kies links een punt.";
+"detectors.nameField" = "Naam";
+"detectors.summaryField" = "Korte omschrijving";
+"detectors.becomes" = "Wordt een";
+"detectors.builtinSub" = "%1$@ · wordt een %2$@";
+"detectors.restore" = "Zet de standaardtekst terug";
+"detectors.remove" = "Dit punt verwijderen";
+"detectors.costNote" = "Elk punt dat aan staat, is één extra vraag per bericht.";
+"detectors.builtinNote" = "Ingebouwde punten kun je uitzetten en herschrijven, maar niet verwijderen.";
+"detectors.removeNamed" = "‘%@’ verwijderen";
+"model.address" = "Adres";
+"model.name" = "Modelnaam";
+"model.key" = "Sleutel (mag leeg)";
+"model.note" = "Elk eindpunt dat de OpenAI-vorm spreekt werkt: Ollama, vLLM, LiteLLM of een dienst elders. Het model krijgt geen gereedschap — tekst erin, een formulier eruit.";
+"mail.account" = "Account in Mail";
+"mail.mailbox" = "Postvak";
+"mail.lookback" = "Terugkijken";
+"mail.lookbackNote" = "Berichten die je al gezien hebt worden overgeslagen, dus een ruime periode kost alleen de eerste keer tijd.";
+"mail.recheck" = "Alle post opnieuw nakijken…";
+"mail.recheckNote" = "De app slaat over wat hij al heeft nagekeken. Heb je bij ‘Waar op letten’ een omschrijving aangepast, dan merk je dat pas bij nieuwe post. Dit stuurt alles opnieuw langs het model. Op dit moment staan %d berichten als nagekeken gemarkeerd.";
+"mail.recheckTitle" = "Alles opnieuw nakijken?";
+"mail.recheckConfirm" = "Opnieuw nakijken";
+"mail.recheckCancel" = "Laat maar";
+"mail.recheckMessage" = "De volgende ronde stuurt alle post uit de gekozen periode opnieuw langs het model. Dat kost tijd, en je kunt voorstellen terugzien die je al had weggeklikt. Wat er al staat, blijft staan.";
+"create.calendarName" = "Eigen agenda en lijst";
+"create.onlyHigh" = "Alleen als de zekerheid hoog is";
+"create.auto" = "Zet ze er vanzelf in, zonder te vragen";
+"create.autoNote" = "Uit: de app stelt voor en jij drukt op de knop. Aan: wat het model ‘hoog’ noemt gaat er meteen in, de rest blijft wachten. Het komt in je eigen agenda en lijst, en onder ‘Afgehandeld’ heeft elk item een knop om het terug te draaien.";
+"create.warnMe" = "Waarschuw me";
+"create.warnNote" = "Bij een uiterste datum krijg je zoveel dagen van tevoren een seintje. De herinnering houdt de echte datum — je wordt alleen eerder gepord, want op de laatste dag lukt iets terugsturen meestal niet meer.";
+"create.scopeNote" = "Wat de app aanmaakt gaat in een eigen agenda en een eigen herinneringenlijst. Je bestaande agenda’s worden gelezen maar nooit gewijzigd.";

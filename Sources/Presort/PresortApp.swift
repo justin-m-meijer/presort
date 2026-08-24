@@ -58,7 +58,7 @@ struct Hoofdvenster: View {
             VStack(alignment: .leading, spacing: 1) {
                 Text("Presort").font(.system(size: 15, weight: .semibold))
                 Text(melding.isEmpty
-                     ? "\(wachtrij.open.count) waiting for you"
+                     ? String(format: t("window.waiting"), wachtrij.open.count)
                      : melding)
                     .font(.system(size: 11))
                     .foregroundStyle(.secondary)
@@ -75,10 +75,10 @@ struct Hoofdvenster: View {
             }
             .labelsHidden()
             .frame(width: 118)
-            .help("How far back the app looks in your mailbox")
-            Button("Check now") { Task { await kern.kijkNa() } }
+            .help(t("toolbar.lookbackHelp"))
+            Button(t("button.checkNow")) { Task { await kern.kijkNa() } }
                 .disabled(bezig || !instellingen.isIngericht)
-            SettingsLink { Text("Instellingen") }
+            SettingsLink { Text(t("button.settings")) }
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 10)
@@ -91,9 +91,9 @@ struct Hoofdvenster: View {
                     Uitleg()
                 }
 
-                Kop("Waiting for you")
+                Kop(t("section.waiting"))
                 if wachtrij.open.isEmpty {
-                    Leeg("Nothing waiting. What was found has been dealt with.")
+                    Leeg(t("empty.waiting"))
                 }
                 ForEach(wachtrij.open) { v in
                     VoorstelKaart(voorstel: v,
@@ -102,14 +102,14 @@ struct Hoofdvenster: View {
                 }
 
                 if !wachtrij.afgehandeld.isEmpty {
-                    Kop("Handled")
+                    Kop(t("section.handled"))
                     ForEach(wachtrij.afgehandeld.prefix(12)) { v in
                         AfgehandeldRij(voorstel: v, terugdraaien: { Task { await kern.draaiTerug(v) } })
                     }
                 }
 
                 if !wachtrij.overgeslagen.isEmpty {
-                    Kop("Nothing found in these")
+                    Kop(t("section.skipped"))
                     ForEach(wachtrij.overgeslagen.prefix(12)) { v in
                         HStack(alignment: .firstTextBaseline) {
                             Text(v.onderwerp).lineLimit(1)
@@ -138,7 +138,8 @@ struct MenubalkTeken: View {
     var body: some View {
         let n = wachtrij.open.count
         Image(systemName: n == 0 ? "tray" : "tray.full.fill")
-            .accessibilityLabel(n == 0 ? "Nothing waiting" : "\(n) waiting for you")
+            .accessibilityLabel(n == 0 ? t("menu.nothingWaiting")
+                                       : String(format: t("window.waiting"), n))
     }
 }
 
@@ -157,35 +158,33 @@ struct Menubalk: View {
             // the whole background loop exists for.
             ForEach(wachtrij.open.prefix(8)) { v in
                 Menu(v.titel) {
-                    Button("File it") { Task { await kern.keur(v, ja: true) } }
-                    Button("Discard") { Task { await kern.keur(v, ja: false) } }
+                    Button(t("button.fileIt")) { Task { await kern.keur(v, ja: true) } }
+                    Button(t("button.discard")) { Task { await kern.keur(v, ja: false) } }
                 }
             }
         }
 
         Divider()
-        Button("Check now") { Task { await kern.kijkNa() } }
+        Button(t("button.checkNow")) { Task { await kern.kijkNa() } }
             .disabled(kern.bezig || !kern.instellingen.isIngericht)
-        Button("Open window") {
+        Button(t("menu.openWindow")) {
             Vensters.onthoud { openWindow(id: Vensters.hoofd) }
             Vensters.naarVoren()
         }
-        SettingsLink { Text("Settings…") }
+        SettingsLink { Text(t("menu.settings")) }
 
         Divider()
-        Button("Quit Presort") { NSApp.terminate(nil) }
+        Button(t("menu.quit")) { NSApp.terminate(nil) }
     }
 
     private var kopregel: String {
-        if kern.bezig { return "Checking…" }
+        if kern.bezig { return t("menu.checking") }
         let n = wachtrij.open.count
-        if n == 0 {
-            guard let v = wekker.volgende else { return "Nothing waiting" }
-            return "Nothing waiting · again at \(Datums.klok(v))"
-        }
-        let wat = n == 1 ? "1 waiting for you" : "\(n) waiting for you"
+        let wat = n == 0
+            ? t("menu.nothingWaiting")
+            : (n == 1 ? t("menu.waiting.one") : String(format: t("window.waiting"), n))
         guard let v = wekker.volgende else { return wat }
-        return "\(wat) · again at \(Datums.klok(v))"
+        return String(format: t("menu.againAt"), wat, Datums.klok(v))
     }
 }
 
@@ -235,8 +234,8 @@ struct VoorstelKaart: View {
             }
             Voorbeeld(voorstel: voorstel)
             HStack(spacing: 8) {
-                Button("File it", action: goedkeuren).buttonStyle(.borderedProminent)
-                Button("Discard", action: weigeren)
+                Button(t("button.fileIt"), action: goedkeuren).buttonStyle(.borderedProminent)
+                Button(t("button.discard"), action: weigeren)
             }
             .controlSize(.small)
             .padding(.top, 2)
@@ -251,7 +250,8 @@ struct VoorstelKaart: View {
     }
 
     private var merk: String {
-        let naam = voorstel.herkenner ?? (voorstel.soort == .afspraak ? "Afspraak" : "Herinnering")
+        let naam = voorstel.herkenner
+            ?? (voorstel.soort == .afspraak ? t("badge.event") : t("badge.reminder"))
         return naam.uppercased()
     }
 }
@@ -271,14 +271,14 @@ struct Voorbeeld: View {
 
             Grid(alignment: .topLeading, horizontalSpacing: 10, verticalSpacing: 3) {
                 if voorstel.soort == .afspraak {
-                    rij("When", Datums.reeks(voorstel.begin, voorstel.eind))
-                    if !voorstel.locatie.isEmpty { rij("Where", voorstel.locatie) }
+                    rij(t("card.when"), Datums.reeks(voorstel.begin, voorstel.eind))
+                    if !voorstel.locatie.isEmpty { rij(t("card.where"), voorstel.locatie) }
                 } else {
-                    rij("Due", voorstel.uiterlijk.map(Datums.lang) ?? "no date")
-                    rij("Alert", seintje)
-                    if !voorstel.bedrag.isEmpty { rij("Amount", voorstel.bedrag) }
+                    rij(t("card.due"), voorstel.uiterlijk.map(Datums.lang) ?? t("date.none"))
+                    rij(t("card.alert"), seintje)
+                    if !voorstel.bedrag.isEmpty { rij(t("card.amount"), voorstel.bedrag) }
                 }
-                rij("Note", voorstel.notitie)
+                rij(t("card.note"), voorstel.notitie)
             }
         }
         .padding(9)
@@ -289,22 +289,20 @@ struct Voorbeeld: View {
 
     private var kop: String {
         let naam = instellingen.agendaNaam
-        return voorstel.soort == .afspraak
-            ? "GOES INTO YOUR CALENDAR ‘\(naam)’"
-            : "GOES INTO YOUR LIST ‘\(naam)’"
+        return String(format: t(voorstel.soort == .afspraak
+                               ? "card.intoCalendar" : "card.intoList"), naam)
     }
 
     /// The same calculation `Agenda` will do later, so that nothing shown here fails to
     /// happen there.
     private var seintje: String {
-        guard voorstel.uiterlijk != nil else { return "none, there is no date" }
+        guard voorstel.uiterlijk != nil else { return t("alert.noneNoDate") }
         guard let wek = Datums.seintje(uiterlijk: voorstel.uiterlijk,
                                        voorsprongDagen: instellingen.voorsprongDagen) else {
-            return instellingen.voorsprongDagen == 0
-                ? "none, you asked for no lead time"
-                : "none, that date has passed"
+            return t(instellingen.voorsprongDagen == 0
+                     ? "alert.noneNoLead" : "alert.nonePassed")
         }
-        return "\(Datums.lang(wek))  (\(instellingen.voorsprongDagen) days earlier)"
+        return String(format: t("alert.at"), Datums.lang(wek), instellingen.voorsprongDagen)
     }
 
     private func rij(_ label: String, _ waarde: String) -> some View {
@@ -334,7 +332,7 @@ struct AfgehandeldRij: View {
             Text(voorstel.fout.isEmpty ? voorstel.status.getoond : voorstel.fout)
                 .foregroundStyle(.tertiary).lineLimit(1)
             if voorstel.status == .goedgekeurd && !voorstel.itemId.isEmpty {
-                Button("Undo", action: terugdraaien).controlSize(.mini)
+                Button(t("button.undo"), action: terugdraaien).controlSize(.mini)
             }
         }
         .font(.system(size: 12))
@@ -346,10 +344,8 @@ struct AfgehandeldRij: View {
 struct Uitleg: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text("Not set up yet").font(.system(size: 13, weight: .semibold))
-            Text("Presort talks to any model that speaks the OpenAI shape — Ollama on this "
-                 + "Mac, a server in your house, or a hosted service. Fill in the address and the "
-                 + "model name under Settings.")
+            Text(t("setup.title")).font(.system(size: 13, weight: .semibold))
+            Text(t("setup.body"))
                 .font(.system(size: 12)).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
         }
         .padding(12)
@@ -369,15 +365,15 @@ struct InstellingenVenster: View {
     var body: some View {
         TabView {
             ModelTabblad()
-                .tabItem { Label("Model", systemImage: "cpu") }
+                .tabItem { Label(t("tab.model"), systemImage: "cpu") }
             PostTabblad()
-                .tabItem { Label("Post", systemImage: "envelope") }
+                .tabItem { Label(t("tab.mail"), systemImage: "envelope") }
             HerkennersTabblad(herkenners: herkenners)
-                .tabItem { Label("What to look for", systemImage: "checklist") }
+                .tabItem { Label(t("tab.watch"), systemImage: "checklist") }
             VanzelfTabblad()
-                .tabItem { Label("Vanzelf", systemImage: "clock") }
+                .tabItem { Label(t("tab.auto"), systemImage: "clock") }
             AanmakenTabblad()
-                .tabItem { Label("Aanmaken", systemImage: "calendar.badge.plus") }
+                .tabItem { Label(t("tab.create"), systemImage: "calendar.badge.plus") }
         }
         .frame(width: 620, height: 480)
     }
@@ -391,18 +387,16 @@ struct VanzelfTabblad: View {
     var body: some View {
         Form {
             Section {
-                Picker("Check by itself", selection: Binding(
+                Picker(t("auto.rhythm"), selection: Binding(
                     get: { instellingen.ritme },
                     set: { instellingen.ritme = $0 })) {
                     ForEach(Ritme.allCases) { r in
                         Text(r.naam).tag(r)
                     }
                 }
-                Toggle("Let me know when something is found", isOn: $instellingen.meldingen)
-                Toggle("Open at login", isOn: $bijInloggen)
-                Text("The app stays in the menu bar and checks by itself at those times. If Mail is "
-                     + "not running at that moment it skips the turn — nothing is ever "
-                     + "started on your behalf.")
+                Toggle(t("auto.notify"), isOn: $instellingen.meldingen)
+                Toggle(t("auto.login"), isOn: $bijInloggen)
+                Text(t("auto.note"))
                     .font(.system(size: 11)).foregroundStyle(.secondary)
                 if !inlogFout.isEmpty {
                     Text(inlogFout).font(.system(size: 11)).foregroundStyle(.red)
@@ -477,16 +471,16 @@ struct HerkennersTabblad: View {
                 Button { keuze = herkenners.voegToe().id } label: {
                     Image(systemName: "plus").tikvlak()
                 }
-                .help("Add a point of your own")
+                .help(t("detectors.add"))
                 Button {
                     verwijderGekozen()
                 } label: {
                     Image(systemName: "minus").tikvlak()
                 }
                 .disabled(gekozen?.eigen != true)
-                .help("Only your own points can be removed")
+                .help(t("detectors.removeOnlyOwn"))
                 Spacer()
-                Text("\(herkenners.actief.count) on")
+                Text(String(format: t("detectors.onCount"), herkenners.actief.count))
                     .font(.system(size: 10)).foregroundStyle(.secondary)
             }
             .buttonStyle(.borderless)
@@ -501,7 +495,7 @@ struct HerkennersTabblad: View {
                 VStack(alignment: .leading, spacing: 10) {
                     kop(h)
 
-                    Text("What the app says to the model about this")
+                    Text(t("detectors.promptHeading"))
                         .font(.system(size: 11, weight: .semibold))
                         .foregroundStyle(.secondary)
                         .padding(.top, 4)
@@ -517,12 +511,9 @@ struct HerkennersTabblad: View {
                         .overlay(RoundedRectangle(cornerRadius: 5)
                             .stroke(Color(nsColor: .separatorColor)))
 
-                    vast("Reply with JSON only, no explanation:\n"
-                         + h.schema + "\n\n" + Herkenner.slot)
+                    vast(t("prompt.reply") + "\n" + h.schema + "\n\n" + Herkenner.slot)
 
-                    Text("The form is fixed and cannot be edited. The app depends on it: titles are "
-                         + "checked for length, dates for whether they were invented. Anyone "
-                         + "allowed to rewrite the form writes that check away.")
+                    Text(t("detectors.formNote"))
                         .font(.system(size: 10)).foregroundStyle(.tertiary)
                         .fixedSize(horizontal: false, vertical: true)
 
@@ -532,7 +523,7 @@ struct HerkennersTabblad: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
         } else {
-            Text("Pick a point on the left.")
+            Text(t("detectors.pickOne"))
                 .font(.system(size: 12)).foregroundStyle(.tertiary)
         }
     }
@@ -542,15 +533,15 @@ struct HerkennersTabblad: View {
         if h.eigen {
             // Your own points you may name entirely yourself; the built-in names
             // are the words in which the app talks about itself.
-            TextField("Name", text: Binding(
+            TextField(t("detectors.nameField"), text: Binding(
                 get: { herkenners.alle.first { $0.id == h.id }?.naam ?? "" },
                 set: { herkenners.hernoem(h.id, naam: $0) }))
                 .font(.system(size: 13, weight: .semibold))
-            TextField("Short description", text: Binding(
+            TextField(t("detectors.summaryField"), text: Binding(
                 get: { herkenners.alle.first { $0.id == h.id }?.uitleg ?? "" },
                 set: { herkenners.hernoem(h.id, uitleg: $0) }))
                 .font(.system(size: 11))
-            Picker("Becomes a", selection: Binding(
+            Picker(t("detectors.becomes"), selection: Binding(
                 get: { h.vorm },
                 set: { herkenners.hernoem(h.id, vorm: $0) })) {
                 ForEach(Herkenner.Vorm.allCases) { v in Text(v.naam).tag(v) }
@@ -558,7 +549,7 @@ struct HerkennersTabblad: View {
             .pickerStyle(.radioGroup)
         } else {
             Text(h.naam).font(.system(size: 14, weight: .semibold))
-            Text("\(h.uitleg) · becomes a \(h.vorm.naam.lowercased())")
+            Text(String(format: t("detectors.builtinSub"), h.uitleg, h.vorm.naam.lowercased()))
                 .font(.system(size: 11)).foregroundStyle(.secondary)
         }
     }
@@ -567,15 +558,15 @@ struct HerkennersTabblad: View {
     private func knoppen(_ h: Herkenner) -> some View {
         HStack {
             if !h.eigen && herkenners.isAangepast(h.id) {
-                Button("Restore the default text") { herkenners.herstel(h.id) }
+                Button(t("detectors.restore")) { herkenners.herstel(h.id) }
             }
             // A button of decent size, next to the small minus on the left: that one is
             // tiny, and it is the only place where removing is possible.
             if h.eigen {
-                Button("Remove this point", role: .destructive) { verwijderGekozen() }
+                Button(t("detectors.remove"), role: .destructive) { verwijderGekozen() }
             }
             Spacer()
-            Text("Every point that is on means one extra question per message.")
+            Text(t("detectors.costNote"))
                 .font(.system(size: 10)).foregroundStyle(.tertiary)
         }
         .controlSize(.small)
@@ -584,7 +575,7 @@ struct HerkennersTabblad: View {
         if !h.eigen {
             // Without this sentence the minus button looks broken: macOS shows no tooltip
             // on a disabled control.
-            Text("Built-in points can be switched off and rewritten, but not removed.")
+            Text(t("detectors.builtinNote"))
                 .font(.system(size: 10)).foregroundStyle(.tertiary)
         }
     }
@@ -592,7 +583,7 @@ struct HerkennersTabblad: View {
     private func rijContextmenu(_ h: Herkenner) -> some View {
         Group {
             if h.eigen {
-                Button("Remove ‘\(h.naam)’") {
+                Button(String(format: t("detectors.removeNamed"), h.naam)) {
                     herkenners.verwijder(h.id)
                     if keuze == h.id { keuze = herkenners.alle.first?.id }
                 }
@@ -629,13 +620,12 @@ struct ModelTabblad: View {
     var body: some View {
         Form {
             Section {
-                TextField("Address", text: $instellingen.eindpunt,
+                TextField(t("model.address"), text: $instellingen.eindpunt,
                           prompt: Text("http://127.0.0.1:11434/v1"))
-                TextField("Model name", text: $instellingen.model,
+                TextField(t("model.name"), text: $instellingen.model,
                           prompt: Text("qwen3:8b"))
-                SecureField("Key (may be empty)", text: $instellingen.sleutel)
-                Text("Any endpoint that speaks the OpenAI shape works: Ollama, vLLM, LiteLLM or a "
-                     + "hosted service. The model is handed no tools — text in, a form out.")
+                SecureField(t("model.key"), text: $instellingen.sleutel)
+                Text(t("model.note"))
                     .font(.system(size: 11)).foregroundStyle(.secondary)
             }
         }
@@ -651,37 +641,31 @@ struct PostTabblad: View {
     var body: some View {
         Form {
             Section {
-                TextField("Account in Mail", text: $instellingen.account)
-                TextField("Mailbox", text: $instellingen.postvak)
-                Picker("Look back", selection: Binding(
+                TextField(t("mail.account"), text: $instellingen.account)
+                TextField(t("mail.mailbox"), text: $instellingen.postvak)
+                Picker(t("mail.lookback"), selection: Binding(
                     get: { instellingen.periode },
                     set: { instellingen.periode = $0 })) {
                     ForEach(Terugkijken.allCases) { p in
                         Text(p.naam).tag(p)
                     }
                 }
-                Text("Messages you have already seen are skipped, so a generous period only costs "
-                     + "time the first run.")
+                Text(t("mail.lookbackNote"))
                     .font(.system(size: 11)).foregroundStyle(.secondary)
             }
             Section {
-                Button("Check all mail again…") { vraagtBevestiging = true }
+                Button(t("mail.recheck")) { vraagtBevestiging = true }
                     .disabled(wachtrij.geziene.isEmpty)
-                Text("The app skips whatever it has already checked. If you adjusted a description "
-                     + "under ‘What to look for’, you will not notice until new mail arrives. "
-                     + "This sends everything past the model again. "
-                     + "\(wachtrij.geziene.count) messages are currently marked as checked.")
+                Text(String(format: t("mail.recheckNote"), wachtrij.geziene.count))
                     .font(.system(size: 11)).foregroundStyle(.secondary)
             }
         }
         .formStyle(.grouped)
-        .confirmationDialog("Check everything again?", isPresented: $vraagtBevestiging) {
-            Button("Check again", role: .destructive) { wachtrij.vergeetGeziene() }
-            Button("Never mind", role: .cancel) {}
+        .confirmationDialog(t("mail.recheckTitle"), isPresented: $vraagtBevestiging) {
+            Button(t("mail.recheckConfirm"), role: .destructive) { wachtrij.vergeetGeziene() }
+            Button(t("mail.recheckCancel"), role: .cancel) {}
         } message: {
-            Text("The next run sends all mail from the chosen period past the model again. That "
-                 + "takes time, and you may see proposals you already dismissed. Whatever is "
-                 + "already there stays.")
+            Text(t("mail.recheckMessage"))
         }
     }
 }
@@ -692,27 +676,21 @@ struct AanmakenTabblad: View {
     var body: some View {
         Form {
             Section {
-                TextField("Own calendar and list", text: $instellingen.agendaNaam)
-                Toggle("Only when confidence is high", isOn: $instellingen.alleenHogeZekerheid)
-                Toggle("File them by itself, without asking", isOn: $instellingen.zetZelfIn)
-                Text("Off: the app proposes and you press the button. On: whatever the model calls "
-                     + "‘hoog’ goes straight in, the rest keeps waiting. It lands in your own "
-                     + "calendar and list, and under ‘Handled’ every item has a button to "
-                     + "undo it.")
+                TextField(t("create.calendarName"), text: $instellingen.agendaNaam)
+                Toggle(t("create.onlyHigh"), isOn: $instellingen.alleenHogeZekerheid)
+                Toggle(t("create.auto"), isOn: $instellingen.zetZelfIn)
+                Text(t("create.autoNote"))
                     .font(.system(size: 11)).foregroundStyle(.secondary)
-                Picker("Warn me", selection: Binding(
+                Picker(t("create.warnMe"), selection: Binding(
                     get: { instellingen.voorsprong },
                     set: { instellingen.voorsprong = $0 })) {
                     ForEach(Voorsprong.allCases) { v in
                         Text(v.naam).tag(v)
                     }
                 }
-                Text("With a deadline you get nudged that many days beforehand. The reminder keeps "
-                     + "the real date — you are simply prodded earlier, because on the final "
-                     + "day sending something back is usually no longer possible.")
+                Text(t("create.warnNote"))
                     .font(.system(size: 11)).foregroundStyle(.secondary)
-                Text("What the app creates goes into a calendar and a reminder list of its own. "
-                     + "Your existing calendars are read but never changed.")
+                Text(t("create.scopeNote"))
                     .font(.system(size: 11)).foregroundStyle(.secondary)
             }
         }

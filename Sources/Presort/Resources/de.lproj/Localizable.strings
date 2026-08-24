@@ -122,3 +122,91 @@
 "mail.error.noAnswer" = "Mail hat nicht geantwortet. %@";
 "mail.error.unknown" = "unbekannter Fehler";
 "mail.truncated" = "\n… (gekürzt)";
+
+/* The main window and the menu bar. */
+
+"window.waiting" = "%d warten auf dich";
+"toolbar.lookbackHelp" = "Wie weit die App in deinem Postfach zurückschaut";
+"button.checkNow" = "Jetzt nachsehen";
+"button.settings" = "Einstellungen";
+"section.waiting" = "Wartet auf dich";
+"empty.waiting" = "Nichts in der Warteschlange. Was gefunden wurde, ist erledigt.";
+"section.handled" = "Erledigt";
+"section.skipped" = "Hierin nichts gefunden";
+"menu.nothingWaiting" = "Nichts in der Warteschlange";
+"menu.waiting.one" = "1 wartet auf dich";
+"menu.againAt" = "%1$@ · wieder um %2$@";
+"menu.checking" = "Wird nachgesehen …";
+"button.fileIt" = "Eintragen";
+"button.discard" = "Verwerfen";
+"menu.openWindow" = "Fenster öffnen";
+"menu.settings" = "Einstellungen …";
+"menu.quit" = "Presort beenden";
+"badge.event" = "Termin";
+"badge.reminder" = "Erinnerung";
+
+/* The proposal card: what will actually be written. */
+
+"card.when" = "Wann";
+"card.where" = "Wo";
+"card.due" = "Frist";
+"card.alert" = "Hinweis";
+"card.amount" = "Betrag";
+"card.note" = "Notiz";
+"card.intoCalendar" = "KOMMT IN DEINEN KALENDER „%@“";
+"card.intoList" = "KOMMT IN DEINE LISTE „%@“";
+"alert.noneNoDate" = "keiner, es gibt kein Datum";
+"alert.noneNoLead" = "keiner, du hast keinen Vorlauf gewählt";
+"alert.nonePassed" = "keiner, das Datum ist vorbei";
+"alert.at" = "%1$@  (%2$d Tage früher)";
+"button.undo" = "Rückgängig";
+"setup.title" = "Noch nicht eingerichtet";
+"setup.body" = "Presort spricht mit jedem Modell, das die OpenAI-Form beherrscht — Ollama auf diesem Mac, ein Server bei dir zu Hause oder ein gehosteter Dienst. Trage Adresse und Modellnamen in den Einstellungen ein.";
+
+/* The settings window. */
+
+"tab.model" = "Modell";
+"tab.mail" = "Post";
+"tab.watch" = "Worauf achten";
+"tab.auto" = "Von selbst";
+"tab.create" = "Anlegen";
+"auto.rhythm" = "Von selbst nachsehen";
+"auto.notify" = "Bescheid geben, wenn etwas gefunden wurde";
+"auto.login" = "Beim Anmelden öffnen";
+"auto.note" = "Die App bleibt in der Menüleiste und sieht zu diesen Zeiten von selbst nach. Läuft Mail gerade nicht, lässt sie die Runde aus — es wird nie etwas für dich gestartet.";
+"detectors.add" = "Einen eigenen Punkt hinzufügen";
+"detectors.removeOnlyOwn" = "Nur eigene Punkte lassen sich entfernen";
+"detectors.onCount" = "%d an";
+"detectors.promptHeading" = "Was die App dem Modell dazu sagt";
+"detectors.formNote" = "Das Formular liegt fest und lässt sich nicht bearbeiten. Die App stützt sich darauf: Titel werden auf ihre Länge geprüft, Daten darauf, ob sie erfunden sind. Wer das Formular umschreiben darf, schreibt diese Prüfung weg.";
+"detectors.pickOne" = "Wähle links einen Punkt.";
+"detectors.nameField" = "Name";
+"detectors.summaryField" = "Kurze Beschreibung";
+"detectors.becomes" = "Wird ein";
+"detectors.builtinSub" = "%1$@ · wird ein %2$@";
+"detectors.restore" = "Standardtext wiederherstellen";
+"detectors.remove" = "Diesen Punkt entfernen";
+"detectors.costNote" = "Jeder eingeschaltete Punkt ist eine zusätzliche Frage pro Nachricht.";
+"detectors.builtinNote" = "Eingebaute Punkte lassen sich ausschalten und umschreiben, aber nicht entfernen.";
+"detectors.removeNamed" = "„%@“ entfernen";
+"model.address" = "Adresse";
+"model.name" = "Modellname";
+"model.key" = "Schlüssel (darf leer sein)";
+"model.note" = "Jeder Endpunkt, der die OpenAI-Form spricht, funktioniert: Ollama, vLLM, LiteLLM oder ein gehosteter Dienst. Das Modell bekommt kein Werkzeug — Text hinein, ein Formular heraus.";
+"mail.account" = "Account in Mail";
+"mail.mailbox" = "Postfach";
+"mail.lookback" = "Zurückschauen";
+"mail.lookbackNote" = "Bereits gesehene Nachrichten werden übersprungen, ein großzügiger Zeitraum kostet also nur beim ersten Durchlauf Zeit.";
+"mail.recheck" = "Alle Post erneut nachsehen …";
+"mail.recheckNote" = "Die App überspringt, was sie schon geprüft hat. Hast du unter „Worauf achten“ eine Beschreibung geändert, merkst du das erst bei neuer Post. Dies schickt alles erneut am Modell vorbei. Derzeit sind %d Nachrichten als geprüft markiert.";
+"mail.recheckTitle" = "Alles erneut nachsehen?";
+"mail.recheckConfirm" = "Erneut nachsehen";
+"mail.recheckCancel" = "Doch nicht";
+"mail.recheckMessage" = "Der nächste Durchlauf schickt alle Post aus dem gewählten Zeitraum erneut am Modell vorbei. Das dauert, und du siehst womöglich Vorschläge wieder, die du schon verworfen hattest. Was bereits da ist, bleibt.";
+"create.calendarName" = "Eigener Kalender und eigene Liste";
+"create.onlyHigh" = "Nur wenn die Sicherheit hoch ist";
+"create.auto" = "Von selbst eintragen, ohne zu fragen";
+"create.autoNote" = "Aus: Die App schlägt vor und du drückst den Knopf. An: Was das Modell „hoog“ nennt, wird sofort eingetragen, der Rest wartet weiter. Es landet in deinem eigenen Kalender und deiner Liste, und unter „Erledigt“ hat jeder Eintrag einen Knopf zum Rückgängigmachen.";
+"create.warnMe" = "Warne mich";
+"create.warnNote" = "Bei einer Frist wirst du so viele Tage vorher angestupst. Die Erinnerung behält das echte Datum — du wirst nur früher erinnert, denn am letzten Tag lässt sich etwas zurückschicken meist nicht mehr.";
+"create.scopeNote" = "Was die App anlegt, kommt in einen eigenen Kalender und eine eigene Erinnerungsliste. Deine vorhandenen Kalender werden gelesen, aber nie verändert.";
