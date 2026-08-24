@@ -64,7 +64,7 @@ back is not much use.
 No Xcode needed; the command line tools are enough.
 
 ```
-./bouw.sh          # builds build/Voorsorteren.app
+./bouw.sh          # builds build/Presort.app
 ./proef.sh         # runs the tests
 ```
 
@@ -82,8 +82,8 @@ far back to look. Nothing is scanned twice.
 
 ## A note on the language
 
-The interface and the source comments are in Dutch, because that is the language of the
-mail it was written to read. The code should still be legible if you don't speak it:
+The interface is being moved to English; the type names in the source are still Dutch, and
+will follow. The app was written to read Dutch mail, which is where the vocabulary comes from. The code should still be legible if you don't speak it:
 `Wachtrij` is queue, `Herkenner` is detector, `Voorstel` is proposal, `Instellingen` is
 settings.
 
