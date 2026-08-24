@@ -3,13 +3,13 @@ import SwiftUI
 
 @main
 struct PresortApp: App {
-    @StateObject private var kern = Kern()
+    @StateObject private var core = Core()
 
     var body: some Scene {
-        WindowGroup("Presort", id: Vensters.hoofd) {
-            Hoofdvenster(kern: kern)
-                .environmentObject(kern.instellingen)
-                .environmentObject(kern.wachtrij)
+        WindowGroup("Presort", id: Windows.main) {
+            MainWindow(core: core)
+                .environmentObject(core.preferences)
+                .environmentObject(core.queue)
                 .frame(minWidth: 620, minHeight: 460)
         }
         .defaultSize(width: 780, height: 620)
@@ -19,102 +19,102 @@ struct PresortApp: App {
         // window is open. The menu bar item keeps the app alive and shows what came in
         // while you were not looking.
         MenuBarExtra {
-            Menubalk(kern: kern, wachtrij: kern.wachtrij, wekker: kern.wekker)
+            MenuBarMenu(core: core, queue: core.queue, alarm: core.alarm)
         } label: {
-            MenubalkTeken(wachtrij: kern.wachtrij)
+            MenuBarIcon(queue: core.queue)
         }
 
         Settings {
-            InstellingenVenster(herkenners: kern.herkenners)
-                .environmentObject(kern.instellingen)
-                .environmentObject(kern.wachtrij)
+            PreferencesWindow(detectors: core.detectors)
+                .environmentObject(core.preferences)
+                .environmentObject(core.queue)
         }
     }
 }
 
-struct Hoofdvenster: View {
-    @ObservedObject var kern: Kern
-    @EnvironmentObject private var instellingen: Instellingen
-    @EnvironmentObject private var wachtrij: Wachtrij
+struct MainWindow: View {
+    @ObservedObject var core: Core
+    @EnvironmentObject private var preferences: Preferences
+    @EnvironmentObject private var queue: Queue
     @Environment(\.openWindow) private var openWindow
 
-    private var melding: String { kern.melding }
-    private var bezig: Bool { kern.bezig }
+    private var statusLine: String { core.statusLine }
+    private var busy: Bool { core.busy }
 
     var body: some View {
         VStack(spacing: 0) {
-            balk
+            bar
             Divider()
-            inhoud
+            content
         }
         .task {
-            Vensters.onthoud { openWindow(id: Vensters.hoofd) }
-            await kern.begin()
+            Windows.remember { openWindow(id: Windows.main) }
+            await core.start()
         }
     }
 
-    private var balk: some View {
+    private var bar: some View {
         HStack(spacing: 12) {
             VStack(alignment: .leading, spacing: 1) {
                 Text("Presort").font(.system(size: 15, weight: .semibold))
-                Text(melding.isEmpty
-                     ? String(format: t("window.waiting"), wachtrij.open.count)
-                     : melding)
+                Text(statusLine.isEmpty
+                     ? String(format: t("window.waiting"), queue.waiting.count)
+                     : statusLine)
                     .font(.system(size: 11))
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
             }
             Spacer()
-            if bezig { ProgressView().controlSize(.small) }
+            if busy { ProgressView().controlSize(.small) }
             Picker("", selection: Binding(
-                get: { instellingen.periode },
-                set: { instellingen.periode = $0 })) {
-                ForEach(Terugkijken.allCases) { p in
-                    Text(p.kort).tag(p)
+                get: { preferences.period },
+                set: { preferences.period = $0 })) {
+                ForEach(LookBack.allCases) { p in
+                    Text(p.short).tag(p)
                 }
             }
             .labelsHidden()
             .frame(width: 118)
             .help(t("toolbar.lookbackHelp"))
-            Button(t("button.checkNow")) { Task { await kern.kijkNa() } }
-                .disabled(bezig || !instellingen.isIngericht)
+            Button(t("button.checkNow")) { Task { await core.check() } }
+                .disabled(busy || !preferences.isConfigured)
             SettingsLink { Text(t("button.settings")) }
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 10)
     }
 
-    private var inhoud: some View {
+    private var content: some View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: 0) {
-                if !instellingen.isIngericht {
-                    Uitleg()
+                if !preferences.isConfigured {
+                    SetupNote()
                 }
 
-                Kop(t("section.waiting"))
-                if wachtrij.open.isEmpty {
-                    Leeg(t("empty.waiting"))
+                SectionHeading(t("section.waiting"))
+                if queue.waiting.isEmpty {
+                    EmptyNote(t("empty.waiting"))
                 }
-                ForEach(wachtrij.open) { v in
-                    VoorstelKaart(voorstel: v,
-                                  goedkeuren: { Task { await kern.keur(v, ja: true) } },
-                                  weigeren: { Task { await kern.keur(v, ja: false) } })
+                ForEach(queue.waiting) { v in
+                    ProposalCard(proposal: v,
+                                  approve: { Task { await core.decide(v, yes: true) } },
+                                  reject: { Task { await core.decide(v, yes: false) } })
                 }
 
-                if !wachtrij.afgehandeld.isEmpty {
-                    Kop(t("section.handled"))
-                    ForEach(wachtrij.afgehandeld.prefix(12)) { v in
-                        AfgehandeldRij(voorstel: v, terugdraaien: { Task { await kern.draaiTerug(v) } })
+                if !queue.handled.isEmpty {
+                    SectionHeading(t("section.handled"))
+                    ForEach(queue.handled.prefix(12)) { v in
+                        HandledRow(proposal: v, undoAction: { Task { await core.undo(v) } })
                     }
                 }
 
-                if !wachtrij.overgeslagen.isEmpty {
-                    Kop(t("section.skipped"))
-                    ForEach(wachtrij.overgeslagen.prefix(12)) { v in
+                if !queue.skipped.isEmpty {
+                    SectionHeading(t("section.skipped"))
+                    ForEach(queue.skipped.prefix(12)) { v in
                         HStack(alignment: .firstTextBaseline) {
-                            Text(v.onderwerp).lineLimit(1)
+                            Text(v.subject).lineLimit(1)
                             Spacer(minLength: 12)
-                            Text(v.reden).foregroundStyle(.tertiary).lineLimit(1)
+                            Text(v.reason).foregroundStyle(.tertiary).lineLimit(1)
                         }
                         .font(.system(size: 12))
                         .padding(.horizontal, 16)
@@ -128,48 +128,48 @@ struct Hoofdvenster: View {
 
 }
 
-// MARK: menubalk
+// MARK: the menu bar
 
 /// The menu bar icon. A full tray when something is waiting, an empty one when you are
 /// up to date -- readable out of the corner of your eye, which a number is not.
-struct MenubalkTeken: View {
-    @ObservedObject var wachtrij: Wachtrij
+struct MenuBarIcon: View {
+    @ObservedObject var queue: Queue
 
     var body: some View {
-        let n = wachtrij.open.count
+        let n = queue.waiting.count
         Image(systemName: n == 0 ? "tray" : "tray.full.fill")
             .accessibilityLabel(n == 0 ? t("menu.nothingWaiting")
                                        : String(format: t("window.waiting"), n))
     }
 }
 
-struct Menubalk: View {
-    @ObservedObject var kern: Kern
-    @ObservedObject var wachtrij: Wachtrij
-    @ObservedObject var wekker: Wekker
+struct MenuBarMenu: View {
+    @ObservedObject var core: Core
+    @ObservedObject var queue: Queue
+    @ObservedObject var alarm: Alarm
     @Environment(\.openWindow) private var openWindow
 
     var body: some View {
-        Text(kopregel)
+        Text(headingLine)
 
-        if !wachtrij.open.isEmpty {
+        if !queue.waiting.isEmpty {
             Divider()
             // Two clicks from the menu bar without opening the window: that case is what
             // the whole background loop exists for.
-            ForEach(wachtrij.open.prefix(8)) { v in
-                Menu(v.titel) {
-                    Button(t("button.fileIt")) { Task { await kern.keur(v, ja: true) } }
-                    Button(t("button.discard")) { Task { await kern.keur(v, ja: false) } }
+            ForEach(queue.waiting.prefix(8)) { v in
+                Menu(v.title) {
+                    Button(t("button.fileIt")) { Task { await core.decide(v, yes: true) } }
+                    Button(t("button.discard")) { Task { await core.decide(v, yes: false) } }
                 }
             }
         }
 
         Divider()
-        Button(t("button.checkNow")) { Task { await kern.kijkNa() } }
-            .disabled(kern.bezig || !kern.instellingen.isIngericht)
+        Button(t("button.checkNow")) { Task { await core.check() } }
+            .disabled(core.busy || !core.preferences.isConfigured)
         Button(t("menu.openWindow")) {
-            Vensters.onthoud { openWindow(id: Vensters.hoofd) }
-            Vensters.naarVoren()
+            Windows.remember { openWindow(id: Windows.main) }
+            Windows.toFront()
         }
         SettingsLink { Text(t("menu.settings")) }
 
@@ -177,24 +177,24 @@ struct Menubalk: View {
         Button(t("menu.quit")) { NSApp.terminate(nil) }
     }
 
-    private var kopregel: String {
-        if kern.bezig { return t("menu.checking") }
-        let n = wachtrij.open.count
-        let wat = n == 0
+    private var headingLine: String {
+        if core.busy { return t("menu.checking") }
+        let n = queue.waiting.count
+        let what = n == 0
             ? t("menu.nothingWaiting")
             : (n == 1 ? t("menu.waiting.one") : String(format: t("window.waiting"), n))
-        guard let v = wekker.volgende else { return wat }
-        return String(format: t("menu.againAt"), wat, Datums.klok(v))
+        guard let v = alarm.next else { return what }
+        return String(format: t("menu.againAt"), what, Dates.clock(v))
     }
 }
 
-// MARK: onderdelen
+// MARK: building blocks
 
-struct Kop: View {
-    let tekst: String
-    init(_ t: String) { tekst = t }
+struct SectionHeading: View {
+    let text: String
+    init(_ t: String) { text = t }
     var body: some View {
-        Text(tekst.uppercased())
+        Text(text.uppercased())
             .font(.system(size: 10, weight: .semibold))
             .kerning(0.8)
             .foregroundStyle(.secondary)
@@ -204,38 +204,38 @@ struct Kop: View {
     }
 }
 
-struct Leeg: View {
-    let tekst: String
-    init(_ t: String) { tekst = t }
+struct EmptyNote: View {
+    let text: String
+    init(_ t: String) { text = t }
     var body: some View {
-        Text(tekst).font(.system(size: 12)).foregroundStyle(.tertiary)
+        Text(text).font(.system(size: 12)).foregroundStyle(.tertiary)
             .padding(.horizontal, 16).padding(.vertical, 6)
     }
 }
 
-struct VoorstelKaart: View {
-    let voorstel: Voorstel
-    let goedkeuren: () -> Void
-    let weigeren: () -> Void
+struct ProposalCard: View {
+    let proposal: Proposal
+    let approve: () -> Void
+    let reject: () -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack(spacing: 8) {
                 // The name of the detector that found it, rather than the shape: that way
                 // you see immediately which setting to adjust when it goes wrong.
-                Text(merk)
+                Text(badge)
                     .font(.system(size: 9, weight: .semibold)).kerning(0.6)
                     .padding(.horizontal, 6).padding(.vertical, 2)
-                    .background(voorstel.soort == .afspraak
+                    .background(proposal.category == .event
                                 ? Color.accentColor.opacity(0.15) : Color.orange.opacity(0.16))
-                    .foregroundStyle(voorstel.soort == .afspraak ? Color.accentColor : Color.orange)
+                    .foregroundStyle(proposal.category == .event ? Color.accentColor : Color.orange)
                     .clipShape(RoundedRectangle(cornerRadius: 3))
-                Text(voorstel.titel).font(.system(size: 13, weight: .semibold)).lineLimit(2)
+                Text(proposal.title).font(.system(size: 13, weight: .semibold)).lineLimit(2)
             }
-            Voorbeeld(voorstel: voorstel)
+            WhatLands(proposal: proposal)
             HStack(spacing: 8) {
-                Button(t("button.fileIt"), action: goedkeuren).buttonStyle(.borderedProminent)
-                Button(t("button.discard"), action: weigeren)
+                Button(t("button.fileIt"), action: approve).buttonStyle(.borderedProminent)
+                Button(t("button.discard"), action: reject)
             }
             .controlSize(.small)
             .padding(.top, 2)
@@ -249,36 +249,36 @@ struct VoorstelKaart: View {
         .padding(.vertical, 4)
     }
 
-    private var merk: String {
-        let naam = voorstel.herkenner
-            ?? (voorstel.soort == .afspraak ? t("badge.event") : t("badge.reminder"))
-        return naam.uppercased()
+    private var badge: String {
+        let name = proposal.detector
+            ?? (proposal.category == .event ? t("badge.event") : t("badge.reminder"))
+        return name.uppercased()
     }
 }
 
 /// Shows what will end up in the calendar or the list, field by field, with
 /// the words that will actually be written. Before this the card showed what had been
 /// picked out of the mail -- which is a different thing from what you are agreeing to.
-struct Voorbeeld: View {
-    let voorstel: Voorstel
-    @EnvironmentObject private var instellingen: Instellingen
+struct WhatLands: View {
+    let proposal: Proposal
+    @EnvironmentObject private var preferences: Preferences
 
     var body: some View {
         VStack(alignment: .leading, spacing: 5) {
-            Text(kop)
+            Text(heading)
                 .font(.system(size: 10, weight: .semibold))
                 .foregroundStyle(.secondary)
 
             Grid(alignment: .topLeading, horizontalSpacing: 10, verticalSpacing: 3) {
-                if voorstel.soort == .afspraak {
-                    rij(t("card.when"), Datums.reeks(voorstel.begin, voorstel.eind))
-                    if !voorstel.locatie.isEmpty { rij(t("card.where"), voorstel.locatie) }
+                if proposal.category == .event {
+                    row(t("card.when"), Dates.spanText(proposal.start, proposal.end))
+                    if !proposal.location.isEmpty { row(t("card.where"), proposal.location) }
                 } else {
-                    rij(t("card.due"), voorstel.uiterlijk.map(Datums.lang) ?? t("date.none"))
-                    rij(t("card.alert"), seintje)
-                    if !voorstel.bedrag.isEmpty { rij(t("card.amount"), voorstel.bedrag) }
+                    row(t("card.due"), proposal.dueDate.map(Dates.long) ?? t("date.none"))
+                    row(t("card.alert"), alert)
+                    if !proposal.amount.isEmpty { row(t("card.amount"), proposal.amount) }
                 }
-                rij(t("card.note"), voorstel.notitie)
+                row(t("card.note"), proposal.note)
             }
         }
         .padding(9)
@@ -287,32 +287,32 @@ struct Voorbeeld: View {
         .clipShape(RoundedRectangle(cornerRadius: 5))
     }
 
-    private var kop: String {
-        let naam = instellingen.agendaNaam
-        return String(format: t(voorstel.soort == .afspraak
-                               ? "card.intoCalendar" : "card.intoList"), naam)
+    private var heading: String {
+        let name = preferences.calendarName
+        return String(format: t(proposal.category == .event
+                               ? "card.intoCalendar" : "card.intoList"), name)
     }
 
     /// The same calculation `Agenda` will do later, so that nothing shown here fails to
     /// happen there.
-    private var seintje: String {
-        guard voorstel.uiterlijk != nil else { return t("alert.noneNoDate") }
-        guard let wek = Datums.seintje(uiterlijk: voorstel.uiterlijk,
-                                       voorsprongDagen: instellingen.voorsprongDagen) else {
-            return t(instellingen.voorsprongDagen == 0
+    private var alert: String {
+        guard proposal.dueDate != nil else { return t("alert.noneNoDate") }
+        guard let wake = Dates.alert(dueDate: proposal.dueDate,
+                                       leadDays: preferences.leadDays) else {
+            return t(preferences.leadDays == 0
                      ? "alert.noneNoLead" : "alert.nonePassed")
         }
-        return String(format: t("alert.at"), Datums.lang(wek), instellingen.voorsprongDagen)
+        return String(format: t("alert.at"), Dates.long(wake), preferences.leadDays)
     }
 
-    private func rij(_ label: String, _ waarde: String) -> some View {
+    private func row(_ label: String, _ value: String) -> some View {
         GridRow {
             Text(label)
                 .font(.system(size: 11))
                 .foregroundStyle(.tertiary)
                 .gridColumnAlignment(.leading)
                 .frame(width: 62, alignment: .leading)
-            Text(waarde.isEmpty ? "—" : waarde)
+            Text(value.isEmpty ? "—" : value)
                 .font(.system(size: 11))
                 .foregroundStyle(.secondary)
                 .textSelection(.enabled)
@@ -321,18 +321,18 @@ struct Voorbeeld: View {
     }
 }
 
-struct AfgehandeldRij: View {
-    let voorstel: Voorstel
-    let terugdraaien: () -> Void
+struct HandledRow: View {
+    let proposal: Proposal
+    let undoAction: () -> Void
 
     var body: some View {
         HStack(alignment: .firstTextBaseline, spacing: 10) {
-            Text(voorstel.titel.isEmpty ? voorstel.onderwerp : voorstel.titel).lineLimit(1)
+            Text(proposal.title.isEmpty ? proposal.subject : proposal.title).lineLimit(1)
             Spacer(minLength: 8)
-            Text(voorstel.fout.isEmpty ? voorstel.status.getoond : voorstel.fout)
+            Text(proposal.error.isEmpty ? proposal.status.getoond : proposal.error)
                 .foregroundStyle(.tertiary).lineLimit(1)
-            if voorstel.status == .goedgekeurd && !voorstel.itemId.isEmpty {
-                Button(t("button.undo"), action: terugdraaien).controlSize(.mini)
+            if proposal.status == .filed && !proposal.itemId.isEmpty {
+                Button(t("button.undo"), action: undoAction).controlSize(.mini)
             }
         }
         .font(.system(size: 12))
@@ -341,7 +341,7 @@ struct AfgehandeldRij: View {
     }
 }
 
-struct Uitleg: View {
+struct SetupNote: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             Text(t("setup.title")).font(.system(size: 13, weight: .semibold))
@@ -359,60 +359,60 @@ struct Uitleg: View {
 
 /// Tabs rather than one long list: everything the app can do has to be findable without
 /// scrolling, otherwise half the settings exist only on paper.
-struct InstellingenVenster: View {
-    @ObservedObject var herkenners: Herkenners
+struct PreferencesWindow: View {
+    @ObservedObject var detectors: Detectors
 
     var body: some View {
         TabView {
-            ModelTabblad()
+            ModelTab()
                 .tabItem { Label(t("tab.model"), systemImage: "cpu") }
-            PostTabblad()
+            MailTab()
                 .tabItem { Label(t("tab.mail"), systemImage: "envelope") }
-            HerkennersTabblad(herkenners: herkenners)
+            DetectorsTab(detectors: detectors)
                 .tabItem { Label(t("tab.watch"), systemImage: "checklist") }
-            VanzelfTabblad()
+            AutomaticTab()
                 .tabItem { Label(t("tab.auto"), systemImage: "clock") }
-            AanmakenTabblad()
+            CreatingTab()
                 .tabItem { Label(t("tab.create"), systemImage: "calendar.badge.plus") }
         }
         .frame(width: 620, height: 480)
     }
 }
 
-struct VanzelfTabblad: View {
-    @EnvironmentObject private var instellingen: Instellingen
-    @State private var bijInloggen = false
-    @State private var inlogFout = ""
+struct AutomaticTab: View {
+    @EnvironmentObject private var preferences: Preferences
+    @State private var atLogin = false
+    @State private var loginError = ""
 
     var body: some View {
         Form {
             Section {
                 Picker(t("auto.rhythm"), selection: Binding(
-                    get: { instellingen.ritme },
-                    set: { instellingen.ritme = $0 })) {
-                    ForEach(Ritme.allCases) { r in
-                        Text(r.naam).tag(r)
+                    get: { preferences.rhythm },
+                    set: { preferences.rhythm = $0 })) {
+                    ForEach(Rhythm.allCases) { r in
+                        Text(r.name).tag(r)
                     }
                 }
-                Toggle(t("auto.notify"), isOn: $instellingen.meldingen)
-                Toggle(t("auto.login"), isOn: $bijInloggen)
+                Toggle(t("auto.notify"), isOn: $preferences.notificationsOn)
+                Toggle(t("auto.login"), isOn: $atLogin)
                 Text(t("auto.note"))
                     .font(.system(size: 11)).foregroundStyle(.secondary)
-                if !inlogFout.isEmpty {
-                    Text(inlogFout).font(.system(size: 11)).foregroundStyle(.red)
+                if !loginError.isEmpty {
+                    Text(loginError).font(.system(size: 11)).foregroundStyle(.red)
                 }
             }
         }
         .formStyle(.grouped)
-        .task { bijInloggen = Inloggen.isAan }
-        .onChange(of: bijInloggen) { _, nieuw in
-            guard nieuw != Inloggen.isAan else { return }
-            inlogFout = Inloggen.zet(nieuw) ?? ""
+        .task { atLogin = LoginItem.isEnabled }
+        .onChange(of: atLogin) { _, new in
+            guard new != LoginItem.isEnabled else { return }
+            loginError = LoginItem.set(new) ?? ""
             // If it failed, the switch must not pretend otherwise.
-            bijInloggen = Inloggen.isAan
+            atLogin = LoginItem.isEnabled
         }
-        .onChange(of: instellingen.meldingen) { _, nieuw in
-            if nieuw { Task { await Meldingen.vraagToestemming() } }
+        .onChange(of: preferences.notificationsOn) { _, new in
+            if new { Task { await Notifier.askPermission() } }
         }
     }
 }
@@ -420,39 +420,39 @@ struct VanzelfTabblad: View {
 /// The list of points the app watches for, with the text behind each. Editable is
 /// only the description; the preamble and the form sit around it, uneditable, so that
 /// what is really being asked stays visible.
-struct HerkennersTabblad: View {
-    @ObservedObject var herkenners: Herkenners
-    @State private var keuze: String?
+struct DetectorsTab: View {
+    @ObservedObject var detectors: Detectors
+    @State private var choice: String?
 
-    private var gekozen: Herkenner? { herkenners.alle.first { $0.id == keuze } }
+    private var selected: Detector? { detectors.all.first { $0.id == choice } }
 
-    private func verwijderGekozen() {
-        guard let h = gekozen, h.eigen else { return }
-        herkenners.verwijder(h.id)
-        keuze = herkenners.alle.first?.id
+    private func removeSelected() {
+        guard let h = selected, h.own else { return }
+        detectors.remove(h.id)
+        choice = detectors.all.first?.id
     }
 
     var body: some View {
         HStack(spacing: 0) {
-            lijst.frame(width: 218)
+            list.frame(width: 218)
             Divider()
             detail.frame(maxWidth: .infinity, maxHeight: .infinity)
         }
-        .task { if keuze == nil { keuze = herkenners.alle.first?.id } }
+        .task { if choice == nil { choice = detectors.all.first?.id } }
     }
 
-    private var lijst: some View {
+    private var list: some View {
         VStack(spacing: 0) {
-            List(selection: $keuze) {
-                ForEach(herkenners.alle) { h in
+            List(selection: $choice) {
+                ForEach(detectors.all) { h in
                     HStack(spacing: 7) {
-                        Toggle("", isOn: Binding(get: { h.aan },
-                                                 set: { herkenners.zet(h.id, aan: $0) }))
+                        Toggle("", isOn: Binding(get: { h.enabled },
+                                                 set: { detectors.set(h.id, enabled: $0) }))
                             .labelsHidden()
                         VStack(alignment: .leading, spacing: 0) {
-                            Text(h.naam).font(.system(size: 12, weight: .medium))
-                            if !h.uitleg.isEmpty {
-                                Text(h.uitleg).font(.system(size: 10))
+                            Text(h.name).font(.system(size: 12, weight: .medium))
+                            if !h.summary.isEmpty {
+                                Text(h.summary).font(.system(size: 10))
                                     .foregroundStyle(.secondary).lineLimit(1)
                             }
                         }
@@ -460,7 +460,7 @@ struct HerkennersTabblad: View {
                     }
                     .contentShape(Rectangle())
                     .tag(h.id)
-                    .contextMenu { rijContextmenu(h) }
+                    .contextMenu { rowContextMenu(h) }
                 }
             }
             Divider()
@@ -468,19 +468,19 @@ struct HerkennersTabblad: View {
                 // The hit area has to come from the label, not from the glyph: a minus
                 // sign is one point tall, and that was exactly the size of the region you
                 // could actually hit.
-                Button { keuze = herkenners.voegToe().id } label: {
-                    Image(systemName: "plus").tikvlak()
+                Button { choice = detectors.add().id } label: {
+                    Image(systemName: "plus").hitArea()
                 }
                 .help(t("detectors.add"))
                 Button {
-                    verwijderGekozen()
+                    removeSelected()
                 } label: {
-                    Image(systemName: "minus").tikvlak()
+                    Image(systemName: "minus").hitArea()
                 }
-                .disabled(gekozen?.eigen != true)
+                .disabled(selected?.own != true)
                 .help(t("detectors.removeOnlyOwn"))
                 Spacer()
-                Text(String(format: t("detectors.onCount"), herkenners.actief.count))
+                Text(String(format: t("detectors.onCount"), detectors.active.count))
                     .font(.system(size: 10)).foregroundStyle(.secondary)
             }
             .buttonStyle(.borderless)
@@ -490,34 +490,34 @@ struct HerkennersTabblad: View {
 
     @ViewBuilder
     private var detail: some View {
-        if let h = gekozen {
+        if let h = selected {
             ScrollView {
                 VStack(alignment: .leading, spacing: 10) {
-                    kop(h)
+                    heading(h)
 
                     Text(t("detectors.promptHeading"))
                         .font(.system(size: 11, weight: .semibold))
                         .foregroundStyle(.secondary)
                         .padding(.top, 4)
 
-                    vast(Herkenner.aanhef)
+                    fixed(Detector.preamble)
 
                     TextEditor(text: Binding(
-                        get: { herkenners.alle.first { $0.id == h.id }?.instructie ?? "" },
-                        set: { herkenners.bewerk(h.id, instructie: $0) }))
+                        get: { detectors.all.first { $0.id == h.id }?.instruction ?? "" },
+                        set: { detectors.edit(h.id, instruction: $0) }))
                         .font(.system(size: 11, design: .monospaced))
                         .frame(minHeight: 150)
                         .padding(4)
                         .overlay(RoundedRectangle(cornerRadius: 5)
                             .stroke(Color(nsColor: .separatorColor)))
 
-                    vast(t("prompt.reply") + "\n" + h.schema + "\n\n" + Herkenner.slot)
+                    fixed(t("prompt.reply") + "\n" + h.schema + "\n\n" + Detector.closing)
 
                     Text(t("detectors.formNote"))
                         .font(.system(size: 10)).foregroundStyle(.tertiary)
                         .fixedSize(horizontal: false, vertical: true)
 
-                    knoppen(h)
+                    buttons(h)
                 }
                 .padding(14)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -529,41 +529,41 @@ struct HerkennersTabblad: View {
     }
 
     @ViewBuilder
-    private func kop(_ h: Herkenner) -> some View {
-        if h.eigen {
+    private func heading(_ h: Detector) -> some View {
+        if h.own {
             // Your own points you may name entirely yourself; the built-in names
             // are the words in which the app talks about itself.
             TextField(t("detectors.nameField"), text: Binding(
-                get: { herkenners.alle.first { $0.id == h.id }?.naam ?? "" },
-                set: { herkenners.hernoem(h.id, naam: $0) }))
+                get: { detectors.all.first { $0.id == h.id }?.name ?? "" },
+                set: { detectors.rename(h.id, name: $0) }))
                 .font(.system(size: 13, weight: .semibold))
             TextField(t("detectors.summaryField"), text: Binding(
-                get: { herkenners.alle.first { $0.id == h.id }?.uitleg ?? "" },
-                set: { herkenners.hernoem(h.id, uitleg: $0) }))
+                get: { detectors.all.first { $0.id == h.id }?.summary ?? "" },
+                set: { detectors.rename(h.id, summary: $0) }))
                 .font(.system(size: 11))
             Picker(t("detectors.becomes"), selection: Binding(
-                get: { h.vorm },
-                set: { herkenners.hernoem(h.id, vorm: $0) })) {
-                ForEach(Herkenner.Vorm.allCases) { v in Text(v.naam).tag(v) }
+                get: { h.kind },
+                set: { detectors.rename(h.id, kind: $0) })) {
+                ForEach(Detector.Kind.allCases) { v in Text(v.name).tag(v) }
             }
             .pickerStyle(.radioGroup)
         } else {
-            Text(h.naam).font(.system(size: 14, weight: .semibold))
-            Text(String(format: t("detectors.builtinSub"), h.uitleg, h.vorm.naam.lowercased()))
+            Text(h.name).font(.system(size: 14, weight: .semibold))
+            Text(String(format: t("detectors.builtinSub"), h.summary, h.kind.name.lowercased()))
                 .font(.system(size: 11)).foregroundStyle(.secondary)
         }
     }
 
     @ViewBuilder
-    private func knoppen(_ h: Herkenner) -> some View {
+    private func buttons(_ h: Detector) -> some View {
         HStack {
-            if !h.eigen && herkenners.isAangepast(h.id) {
-                Button(t("detectors.restore")) { herkenners.herstel(h.id) }
+            if !h.own && detectors.isEdited(h.id) {
+                Button(t("detectors.restore")) { detectors.restore(h.id) }
             }
             // A button of decent size, next to the small minus on the left: that one is
             // tiny, and it is the only place where removing is possible.
-            if h.eigen {
-                Button(t("detectors.remove"), role: .destructive) { verwijderGekozen() }
+            if h.own {
+                Button(t("detectors.remove"), role: .destructive) { removeSelected() }
             }
             Spacer()
             Text(t("detectors.costNote"))
@@ -572,7 +572,7 @@ struct HerkennersTabblad: View {
         .controlSize(.small)
         .padding(.top, 2)
 
-        if !h.eigen {
+        if !h.own {
             // Without this sentence the minus button looks broken: macOS shows no tooltip
             // on a disabled control.
             Text(t("detectors.builtinNote"))
@@ -580,19 +580,19 @@ struct HerkennersTabblad: View {
         }
     }
 
-    private func rijContextmenu(_ h: Herkenner) -> some View {
+    private func rowContextMenu(_ h: Detector) -> some View {
         Group {
-            if h.eigen {
-                Button(String(format: t("detectors.removeNamed"), h.naam)) {
-                    herkenners.verwijder(h.id)
-                    if keuze == h.id { keuze = herkenners.alle.first?.id }
+            if h.own {
+                Button(String(format: t("detectors.removeNamed"), h.name)) {
+                    detectors.remove(h.id)
+                    if choice == h.id { choice = detectors.all.first?.id }
                 }
             }
         }
     }
 
-    private func vast(_ tekst: String) -> some View {
-        Text(tekst)
+    private func fixed(_ text: String) -> some View {
+        Text(text)
             .font(.system(size: 10, design: .monospaced))
             .foregroundStyle(.tertiary)
             .textSelection(.enabled)
@@ -608,23 +608,23 @@ extension View {
     /// Gives a small glyph a hit area a mouse can aim at. Without this, the clickable
     /// region of a borderless button reaches exactly as far as the drawing: for a minus
     /// sign that is one point tall.
-    func tikvlak(breed: CGFloat = 24, hoog: CGFloat = 20) -> some View {
-        frame(width: breed, height: hoog)
+    func hitArea(wide: CGFloat = 24, tall: CGFloat = 20) -> some View {
+        frame(width: wide, height: tall)
             .contentShape(Rectangle())
     }
 }
 
-struct ModelTabblad: View {
-    @EnvironmentObject private var instellingen: Instellingen
+struct ModelTab: View {
+    @EnvironmentObject private var preferences: Preferences
 
     var body: some View {
         Form {
             Section {
-                TextField(t("model.address"), text: $instellingen.eindpunt,
+                TextField(t("model.address"), text: $preferences.endpoint,
                           prompt: Text("http://127.0.0.1:11434/v1"))
-                TextField(t("model.name"), text: $instellingen.model,
+                TextField(t("model.name"), text: $preferences.model,
                           prompt: Text("qwen3:8b"))
-                SecureField(t("model.key"), text: $instellingen.sleutel)
+                SecureField(t("model.key"), text: $preferences.key)
                 Text(t("model.note"))
                     .font(.system(size: 11)).foregroundStyle(.secondary)
             }
@@ -633,36 +633,36 @@ struct ModelTabblad: View {
     }
 }
 
-struct PostTabblad: View {
-    @EnvironmentObject private var instellingen: Instellingen
-    @EnvironmentObject private var wachtrij: Wachtrij
-    @State private var vraagtBevestiging = false
+struct MailTab: View {
+    @EnvironmentObject private var preferences: Preferences
+    @EnvironmentObject private var queue: Queue
+    @State private var asksConfirmation = false
 
     var body: some View {
         Form {
             Section {
-                TextField(t("mail.account"), text: $instellingen.account)
-                TextField(t("mail.mailbox"), text: $instellingen.postvak)
+                TextField(t("mail.account"), text: $preferences.account)
+                TextField(t("mail.mailbox"), text: $preferences.mailbox)
                 Picker(t("mail.lookback"), selection: Binding(
-                    get: { instellingen.periode },
-                    set: { instellingen.periode = $0 })) {
-                    ForEach(Terugkijken.allCases) { p in
-                        Text(p.naam).tag(p)
+                    get: { preferences.period },
+                    set: { preferences.period = $0 })) {
+                    ForEach(LookBack.allCases) { p in
+                        Text(p.name).tag(p)
                     }
                 }
                 Text(t("mail.lookbackNote"))
                     .font(.system(size: 11)).foregroundStyle(.secondary)
             }
             Section {
-                Button(t("mail.recheck")) { vraagtBevestiging = true }
-                    .disabled(wachtrij.geziene.isEmpty)
-                Text(String(format: t("mail.recheckNote"), wachtrij.geziene.count))
+                Button(t("mail.recheck")) { asksConfirmation = true }
+                    .disabled(queue.seen.isEmpty)
+                Text(String(format: t("mail.recheckNote"), queue.seen.count))
                     .font(.system(size: 11)).foregroundStyle(.secondary)
             }
         }
         .formStyle(.grouped)
-        .confirmationDialog(t("mail.recheckTitle"), isPresented: $vraagtBevestiging) {
-            Button(t("mail.recheckConfirm"), role: .destructive) { wachtrij.vergeetGeziene() }
+        .confirmationDialog(t("mail.recheckTitle"), isPresented: $asksConfirmation) {
+            Button(t("mail.recheckConfirm"), role: .destructive) { queue.forgetSeen() }
             Button(t("mail.recheckCancel"), role: .cancel) {}
         } message: {
             Text(t("mail.recheckMessage"))
@@ -670,22 +670,22 @@ struct PostTabblad: View {
     }
 }
 
-struct AanmakenTabblad: View {
-    @EnvironmentObject private var instellingen: Instellingen
+struct CreatingTab: View {
+    @EnvironmentObject private var preferences: Preferences
 
     var body: some View {
         Form {
             Section {
-                TextField(t("create.calendarName"), text: $instellingen.agendaNaam)
-                Toggle(t("create.onlyHigh"), isOn: $instellingen.alleenHogeZekerheid)
-                Toggle(t("create.auto"), isOn: $instellingen.zetZelfIn)
+                TextField(t("create.calendarName"), text: $preferences.calendarName)
+                Toggle(t("create.onlyHigh"), isOn: $preferences.onlyHighConfidence)
+                Toggle(t("create.auto"), isOn: $preferences.fileAutomatically)
                 Text(t("create.autoNote"))
                     .font(.system(size: 11)).foregroundStyle(.secondary)
                 Picker(t("create.warnMe"), selection: Binding(
-                    get: { instellingen.voorsprong },
-                    set: { instellingen.voorsprong = $0 })) {
-                    ForEach(Voorsprong.allCases) { v in
-                        Text(v.naam).tag(v)
+                    get: { preferences.leadTime },
+                    set: { preferences.leadTime = $0 })) {
+                    ForEach(LeadTime.allCases) { v in
+                        Text(v.name).tag(v)
                     }
                 }
                 Text(t("create.warnNote"))

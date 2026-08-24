@@ -11,8 +11,8 @@ trap 'rm -rf "$OUT"' EXIT
 # lookups resolve -- without the test having to know anything about SwiftPM's bundle.
 cp -R Sources/Presort/Resources/*.lproj "$OUT/"
 
-swiftc -o "$OUT/proef" \
-    Sources/Presort/Herkenners.swift \
-    Sources/Presort/Wachtrij.swift \
-    Proef/main.swift
-"$OUT/proef"
+swiftc -o "$OUT/test" \
+    Sources/Presort/Detectors.swift \
+    Sources/Presort/Queue.swift \
+    Test/main.swift
+"$OUT/test"

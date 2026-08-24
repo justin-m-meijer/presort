@@ -5,111 +5,111 @@ import Foundation
 /// in the window.
 @MainActor
 final class Scanner: ObservableObject {
-    @Published var bezig = false
-    @Published var laatsteMelding = ""
+    @Published var busy = false
+    @Published var lastStatusLine = ""
 
-    private let instellingen: Instellingen
-    private let wachtrij: Wachtrij
-    private let herkenners: Herkenners
+    private let preferences: Preferences
+    private let queue: Queue
+    private let detectors: Detectors
 
-    init(instellingen: Instellingen, wachtrij: Wachtrij, herkenners: Herkenners) {
-        self.instellingen = instellingen
-        self.wachtrij = wachtrij
-        self.herkenners = herkenners
+    init(preferences: Preferences, queue: Queue, detectors: Detectors) {
+        self.preferences = preferences
+        self.queue = queue
+        self.detectors = detectors
     }
 
     /// What a run produced. The caller decides what happens with it: the window puts it
     /// in the status bar, a background run turns it into a notification.
-    struct Uitkomst {
-        var nagekeken = 0
-        var voorgesteld = 0
+    struct Outcome {
+        var checked = 0
+        var proposed = 0
         /// Messages where Mail or the model dropped out. Those stay open for the next
         /// run, so they do not count as checked.
-        var mislukt = 0
-        var titels: [String] = []
+        var failed = 0
+        var titles: [String] = []
         /// The proposals from this run, so the caller can handle them without guessing
         /// which ones are new.
         var ids: [String] = []
-        var melding = ""
+        var statusLine = ""
     }
 
     /// `voortgang` is called during the run with the line that belongs in the status
     /// bar. Without that hand-off you only see the outcome afterwards.
-    func kijkNa(voortgang: (String) -> Void = { _ in }) async -> Uitkomst {
-        var uit = Uitkomst()
-        guard !bezig else { return uit }
-        guard instellingen.isIngericht else {
-            uit.melding = t("scan.notConfigured")
-            laatsteMelding = uit.melding
-            return uit
+    func check(progress: (String) -> Void = { _ in }) async -> Outcome {
+        var outcome = Outcome()
+        guard !busy else { return outcome }
+        guard preferences.isConfigured else {
+            outcome.statusLine = t("scan.notConfigured")
+            lastStatusLine = outcome.statusLine
+            return outcome
         }
-        let punten = herkenners.actief
-        guard !punten.isEmpty else {
-            uit.melding = t("scan.nothingEnabled")
-            laatsteMelding = uit.melding
-            return uit
+        let points = detectors.active
+        guard !points.isEmpty else {
+            outcome.statusLine = t("scan.nothingEnabled")
+            lastStatusLine = outcome.statusLine
+            return outcome
         }
 
-        bezig = true
-        defer { bezig = false }
+        busy = true
+        defer { busy = false }
 
-        let postvak = Postvak(account: instellingen.account, postvak: instellingen.postvak)
-        let client = ModelClient(eindpunt: instellingen.eindpunt,
-                                 sleutel: instellingen.sleutel,
-                                 model: instellingen.model)
+        let mailbox = Mailbox(account: preferences.account, mailbox: preferences.mailbox)
+        let client = ModelClient(endpoint: preferences.endpoint,
+                                 key: preferences.key,
+                                 model: preferences.model)
 
-        voortgang(String(format: t("scan.fetching"), instellingen.postvak))
+        progress(String(format: t("scan.fetching"), preferences.mailbox))
 
-        let berichten: [Postvak.Bericht]
+        let messages: [Mailbox.Message]
         do {
-            berichten = try postvak.recent(dagen: instellingen.dagen, limiet: 40)
+            messages = try mailbox.recent(days: preferences.days, limit: 40)
         } catch {
-            uit.melding = error.localizedDescription
-            laatsteMelding = uit.melding
-            return uit
+            outcome.statusLine = error.localizedDescription
+            lastStatusLine = outcome.statusLine
+            return outcome
         }
 
-        let nieuw = berichten.filter { !wachtrij.isGezien($0.id) }
-        guard !nieuw.isEmpty else {
-            uit.melding = String(format: t("scan.nothingNew"), instellingen.postvak)
-            laatsteMelding = uit.melding
-            return uit
+        let new = messages.filter { !queue.isSeen($0.id) }
+        guard !new.isEmpty else {
+            outcome.statusLine = String(format: t("scan.nothingNew"), preferences.mailbox)
+            lastStatusLine = outcome.statusLine
+            return outcome
         }
 
-        var voorgesteld = 0
-        for b in nieuw.prefix(15) {
-            voortgang(String(format: t("scan.working"), String(b.onderwerp.prefix(40))))
+        var proposed = 0
+        for b in new.prefix(15) {
+            progress(String(format: t("scan.working"), String(b.subject.prefix(40))))
 
             // A message only counts as seen once it has been judged: either a proposal
             // came out, or it was deliberately skipped. If Mail or the model drops out it
             // stays open -- otherwise the message vanishes quietly and nobody ever looks
             // at it again.
-            let tekst: String
+            let text: String
             do {
-                tekst = try postvak.inhoud(van: b.id)
+                text = try mailbox.content(from: b.id)
             } catch {
-                uit.mislukt += 1
+                outcome.failed += 1
                 continue
             }
 
-            guard !tekst.isEmpty else {
+            guard !text.isEmpty else {
                 // Read fine, there was simply nothing in it. That is a judgement.
-                noteerOvergeslagen(b, t("skip.noContent"))
-                wachtrij.markeerGezien(b.id)
-                uit.nagekeken += 1
+                noteSkipped(b, t("skip.noContent"))
+                queue.markSeen(b.id)
+                outcome.checked += 1
                 continue
             }
 
             // The frame around the message. It is part of the prompt, so it follows the
             // app language: an English frame around Dutch keys is what made the model
             // answer in the wrong language before.
-            let kader = """
-            \(String(format: t("frame.today"), Datums.vandaag()))
-            \(t("frame.sender")) \(b.afzender)
-            \(t("frame.subject")) \(b.onderwerp)
+            let frame = """
+            \(String(format: t("frame.today"), Dates.today()))
+            \(t("frame.sender")) \(b.sender)
+            \(t("frame.subject")) \(b.subject)
 
             \(t("frame.untrusted"))
-            \(tekst)
+            \(text)
             \(t("frame.end"))
             """
 
@@ -117,128 +117,128 @@ final class Scanner: ObservableObject {
             // message yields at most one proposal: two reminders out of the same mail are
             // nearly always the same thing said twice. A failure from the model is not a
             // judgement, so nothing is marked after one.
-            var voorstel: Voorstel?
+            var proposal: Proposal?
             // Unreadable JSON is as much a non-judgement as a network failure: only once
             // at least one answer could be read do we know anything.
-            var begrepen = false
+            var understood = false
             do {
-                for punt in punten {
-                    let antwoord = try await client.vraag(systeem: punt.systeemtekst,
-                                                          gebruiker: kader)
-                    guard let o = ModelClient.jsonUit(antwoord) else { continue }
-                    begrepen = true
-                    voorstel = punt.vorm == .afspraak
-                        ? maakAfspraakVoorstel(o, b, punt)
-                        : maakActieVoorstel(o, b, punt)
-                    if voorstel != nil { break }
+                for point in points {
+                    let answer = try await client.ask(system: point.systemText,
+                                                          user: frame)
+                    guard let o = ModelClient.jsonFrom(answer) else { continue }
+                    understood = true
+                    proposal = point.kind == .event
+                        ? makeEventProposal(o, b, point)
+                        : makeTaskProposal(o, b, point)
+                    if proposal != nil { break }
                 }
             } catch {
-                uit.mislukt += 1
+                outcome.failed += 1
                 continue
             }
 
-            guard begrepen else {
-                uit.mislukt += 1
+            guard understood else {
+                outcome.failed += 1
                 continue
             }
 
-            if let v = voorstel {
-                wachtrij.voegToe(v)
-                voorgesteld += 1
-                uit.titels.append(v.titel)
-                uit.ids.append(v.id)
+            if let v = proposal {
+                queue.add(v)
+                proposed += 1
+                outcome.titles.append(v.title)
+                outcome.ids.append(v.id)
             } else {
-                noteerOvergeslagen(b, punten.count == 1
-                    ? String(format: t("skip.noneOfOne"), punten[0].naam.lowercased())
-                    : String(format: t("skip.noneOfMany"), punten.count))
+                noteSkipped(b, points.count == 1
+                    ? String(format: t("skip.noneOfOne"), points[0].name.lowercased())
+                    : String(format: t("skip.noneOfMany"), points.count))
             }
-            wachtrij.markeerGezien(b.id)
-            uit.nagekeken += 1
+            queue.markSeen(b.id)
+            outcome.checked += 1
         }
 
-        uit.voorgesteld = voorgesteld
-        let staart = uit.mislukt == 0
+        outcome.proposed = proposed
+        let tail = outcome.failed == 0
             ? ""
-            : String(format: t("scan.failedTail"), uit.mislukt)
-        uit.melding = (voorgesteld == 0
-            ? String(format: t("scan.nothingFound"), uit.nagekeken)
-            : String(format: t("scan.found"), voorgesteld, uit.nagekeken)) + staart
-        laatsteMelding = uit.melding
-        return uit
+            : String(format: t("scan.failedTail"), outcome.failed)
+        outcome.statusLine = (proposed == 0
+            ? String(format: t("scan.nothingFound"), outcome.checked)
+            : String(format: t("scan.found"), proposed, outcome.checked)) + tail
+        lastStatusLine = outcome.statusLine
+        return outcome
     }
 
     // MARK: checking the answer
 
-    private func zekerheid(_ o: [String: Any]) -> String? {
+    private func confidence(_ o: [String: Any]) -> String? {
         (o["zekerheid"] as? String)?.lowercased()
     }
 
-    private func zekerGenoeg(_ o: [String: Any]) -> Bool {
-        guard instellingen.alleenHogeZekerheid else { return true }
+    private func confidentEnough(_ o: [String: Any]) -> Bool {
+        guard preferences.onlyHighConfidence else { return true }
         return (o["zekerheid"] as? String)?.lowercased() == "hoog"
     }
 
-    private func maakAfspraakVoorstel(_ o: [String: Any], _ b: Postvak.Bericht,
-                                      _ punt: Herkenner) -> Voorstel? {
-        guard (o["gevonden"] as? Bool) == true, zekerGenoeg(o) else { return nil }
-        let titel = (o["titel"] as? String ?? "").trimmingCharacters(in: .whitespaces)
-        guard titel.count >= 2, titel.count <= 120,
-              let begin = Datums.lees(o["begin"] as? String),
-              Datums.redelijk(begin) else { return nil }
-        let eind = Datums.lees(o["eind"] as? String) ?? begin.addingTimeInterval(3600)
-        guard eind > begin, eind.timeIntervalSince(begin) < 60 * 60 * 48 else { return nil }
+    private func makeEventProposal(_ o: [String: Any], _ b: Mailbox.Message,
+                                      _ point: Detector) -> Proposal? {
+        guard (o["gevonden"] as? Bool) == true, confidentEnough(o) else { return nil }
+        let title = (o["titel"] as? String ?? "").trimmingCharacters(in: .whitespaces)
+        guard title.count >= 2, title.count <= 120,
+              let start = Dates.read(o["begin"] as? String),
+              Dates.plausible(start) else { return nil }
+        let end = Dates.read(o["eind"] as? String) ?? start.addingTimeInterval(3600)
+        guard end > start, end.timeIntervalSince(start) < 60 * 60 * 48 else { return nil }
 
-        return Voorstel(soort: .afspraak, afzender: b.afzender, onderwerp: b.onderwerp,
-                        titel: titel, begin: begin, eind: eind,
-                        locatie: String((o["locatie"] as? String ?? "").prefix(200)),
-                        notitie: notitie(b), herkenner: punt.naam, zekerheid: zekerheid(o))
+        return Proposal(category: .event, sender: b.sender, subject: b.subject,
+                        title: title, start: start, end: end,
+                        location: String((o["locatie"] as? String ?? "").prefix(200)),
+                        note: note(b), detector: point.name, confidence: confidence(o))
     }
 
-    private func maakActieVoorstel(_ o: [String: Any], _ b: Postvak.Bericht,
-                                   _ punt: Herkenner) -> Voorstel? {
-        guard (o["gevonden"] as? Bool) == true, zekerGenoeg(o) else { return nil }
-        let wat = (o["wat"] as? String ?? "").trimmingCharacters(in: .whitespaces)
-        guard wat.count >= 4, wat.count <= 200 else { return nil }
-        let uiterlijk = Datums.lees(o["uiterlijk"] as? String)
-        if let u = uiterlijk, !Datums.redelijk(u) { return nil }
+    private func makeTaskProposal(_ o: [String: Any], _ b: Mailbox.Message,
+                                   _ point: Detector) -> Proposal? {
+        guard (o["gevonden"] as? Bool) == true, confidentEnough(o) else { return nil }
+        let what = (o["wat"] as? String ?? "").trimmingCharacters(in: .whitespaces)
+        guard what.count >= 4, what.count <= 200 else { return nil }
+        let dueDate = Dates.read(o["uiterlijk"] as? String)
+        if let u = dueDate, !Dates.plausible(u) { return nil }
 
-        let bedrag = String((o["bedrag"] as? String ?? "").prefix(40))
-        return Voorstel(soort: .herinnering, afzender: b.afzender, onderwerp: b.onderwerp,
-                        titel: wat, uiterlijk: uiterlijk, bedrag: bedrag,
-                        notitie: notitie(b) + (bedrag.isEmpty ? "" : String(format: t("note.amount"), bedrag)),
-                        herkenner: punt.naam, zekerheid: zekerheid(o))
+        let amount = String((o["bedrag"] as? String ?? "").prefix(40))
+        return Proposal(category: .reminder, sender: b.sender, subject: b.subject,
+                        title: what, dueDate: dueDate, amount: amount,
+                        note: note(b) + (amount.isEmpty ? "" : String(format: t("note.amount"), amount)),
+                        detector: point.name, confidence: confidence(o))
     }
 
-    private func notitie(_ b: Postvak.Bericht) -> String {
-        String(format: t("note.detected"), b.afzender, b.onderwerp)
+    private func note(_ b: Mailbox.Message) -> String {
+        String(format: t("note.detected"), b.sender, b.subject)
     }
 
-    private func noteerOvergeslagen(_ b: Postvak.Bericht, _ reden: String) {
-        wachtrij.voegToe(Voorstel(soort: .overgeslagen, afzender: b.afzender,
-                                  onderwerp: b.onderwerp, reden: reden))
+    private func noteSkipped(_ b: Mailbox.Message, _ reason: String) {
+        queue.add(Proposal(category: .skipped, sender: b.sender,
+                                  subject: b.subject, reason: reason))
     }
 }
 
 /// The locale the dates on screen follow. Deliberately not `Locale.current`: a Mac set to
 /// Dutch running the app in English would otherwise put Dutch month names next to English
 /// labels. It follows the language the app is actually showing.
-let appLocale = Locale(identifier: catalogus.preferredLocalizations.first ?? "en")
+let appLocale = Locale(identifier: catalogue.preferredLocalizations.first ?? "en")
 
-enum Datums {
-    static func vandaag() -> String {
+enum Dates {
+    static func today() -> String {
         let f = DateFormatter()
         f.dateFormat = "yyyy-MM-dd"
         return f.string(from: Date())
     }
 
-    static func lees(_ s: String?) -> Date? {
+    static func read(_ s: String?) -> Date? {
         guard let s, !s.isEmpty else { return nil }
-        for patroon in ["yyyy-MM-dd'T'HH:mm", "yyyy-MM-dd'T'HH:mm:ss", "yyyy-MM-dd"] {
+        for pattern in ["yyyy-MM-dd'T'HH:mm", "yyyy-MM-dd'T'HH:mm:ss", "yyyy-MM-dd"] {
             let f = DateFormatter()
-            f.dateFormat = patroon
+            f.dateFormat = pattern
             f.locale = Locale(identifier: "en_US_POSIX")
             if var d = f.date(from: s) {
-                if patroon == "yyyy-MM-dd" {
+                if pattern == "yyyy-MM-dd" {
                     d = Calendar.current.date(bySettingHour: 9, minute: 0, second: 0, of: d) ?? d
                 }
                 return d
@@ -248,11 +248,11 @@ enum Datums {
     }
 
     /// Between roughly a month back and a year ahead. Anything outside that is invented.
-    static func redelijk(_ d: Date) -> Bool {
+    static func plausible(_ d: Date) -> Bool {
         d > Date().addingTimeInterval(-86400 * 31) && d < Date().addingTimeInterval(86400 * 400)
     }
 
-    static func kort(_ d: Date?) -> String {
+    static func short(_ d: Date?) -> String {
         guard let d else { return t("date.none") }
         let f = DateFormatter()
         f.locale = appLocale
@@ -263,47 +263,47 @@ enum Datums {
     /// When the alert fires for a deadline, or nil if there is none. Both the card and
     /// `Agenda.maakHerinnering` use this: if those two did their own arithmetic, the
     /// window would promise something other than what happens.
-    static func seintje(uiterlijk: Date?, voorsprongDagen: Int) -> Date? {
-        guard let d = uiterlijk, voorsprongDagen > 0 else { return nil }
-        let wek = d.addingTimeInterval(-Double(voorsprongDagen) * 86400)
-        return wek > Date() ? wek : nil
+    static func alert(dueDate: Date?, leadDays: Int) -> Date? {
+        guard let d = dueDate, leadDays > 0 else { return nil }
+        let wake = d.addingTimeInterval(-Double(leadDays) * 86400)
+        return wake > Date() ? wake : nil
     }
 
     /// "Fri 4 Sep 2026, 09:00"
-    static func lang(_ d: Date) -> String {
-        vorm("EEE d MMM yyyy, HH:mm").string(from: d)
+    static func long(_ d: Date) -> String {
+        kind("EEE d MMM yyyy, HH:mm").string(from: d)
     }
 
     /// "Fri 4 Sep 2026"
-    static func langDag(_ d: Date) -> String {
-        vorm("EEE d MMM yyyy").string(from: d)
+    static func longDay(_ d: Date) -> String {
+        kind("EEE d MMM yyyy").string(from: d)
     }
 
     /// Two moments; the day appears only once when it is the same day.
-    static func reeks(_ begin: Date?, _ eind: Date?) -> String {
-        guard let begin else { return t("date.none") }
-        guard let eind else { return lang(begin) }
-        if Calendar.current.isDate(begin, inSameDayAs: eind) {
-            return lang(begin) + " – " + vorm("HH:mm").string(from: eind)
+    static func spanText(_ start: Date?, _ end: Date?) -> String {
+        guard let start else { return t("date.none") }
+        guard let end else { return long(start) }
+        if Calendar.current.isDate(start, inSameDayAs: end) {
+            return long(start) + " – " + kind("HH:mm").string(from: end)
         }
-        return lang(begin) + " – " + lang(eind)
+        return long(start) + " – " + long(end)
     }
 
-    private static func vorm(_ patroon: String) -> DateFormatter {
+    private static func kind(_ pattern: String) -> DateFormatter {
         let f = DateFormatter()
         f.locale = appLocale
-        f.dateFormat = patroon
+        f.dateFormat = pattern
         return f
     }
 
-    static func klok(_ d: Date) -> String {
+    static func clock(_ d: Date) -> String {
         let f = DateFormatter()
         f.locale = appLocale
         f.dateFormat = "HH:mm"
         return f.string(from: d)
     }
 
-    static func kortDag(_ d: Date?) -> String {
+    static func shortDay(_ d: Date?) -> String {
         guard let d else { return t("date.none") }
         let f = DateFormatter()
         f.locale = appLocale

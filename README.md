@@ -64,8 +64,8 @@ back is not much use.
 No Xcode needed; the command line tools are enough.
 
 ```
-./bouw.sh          # builds build/Presort.app
-./proef.sh         # runs the tests
+./build.sh         # builds build/Presort.app
+./test.sh          # runs the tests
 ```
 
 The build is ad-hoc signed, which is enough to run it yourself. Distributing it to other
@@ -80,12 +80,17 @@ Everything lives in Settings, nothing in the source. Point it at your model (add
 model name, optional key), tell it which Mail account and mailbox to read, and choose how
 far back to look. Nothing is scanned twice.
 
-## A note on the language
+## Languages
 
-The interface is being moved to English; the type names in the source are still Dutch, and
-will follow. The app was written to read Dutch mail, which is where the vocabulary comes from. The code should still be legible if you don't speak it:
-`Wachtrij` is queue, `Herkenner` is detector, `Voorstel` is proposal, `Instellingen` is
-settings.
+The interface, the six descriptions and the prompt frame around your mail ship in English,
+Dutch, French and German, and follow whatever language your Mac is set to. The French and
+German translations have not been checked by a native speaker yet.
+
+The language matters more than usual here, because the frame around your description is
+also what tells the model which language to answer in — so a French Mac gets French
+reminders, not translated ones.
+
+The source, its comments and everything on GitHub are in English.
 
 ## Licence
 

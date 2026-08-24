@@ -3,34 +3,34 @@ import Foundation
 /// Reads Mail.app through AppleScript, so no password is needed: the user is already
 /// signed in there. The price is that Mail has to be running -- IMAP may follow as a
 /// second route for people who do not use Mail.
-struct Postvak {
-    struct Bericht: Identifiable, Hashable {
+struct Mailbox {
+    struct Message: Identifiable, Hashable {
         let id: String
-        let datum: String
-        let afzender: String
-        let onderwerp: String
-        let gelezen: Bool
+        let date: String
+        let sender: String
+        let subject: String
+        let wasRead: Bool
     }
 
-    enum Fout: LocalizedError {
-        case scriptMislukt(String)
+    enum Problem: LocalizedError {
+        case scriptFailed(String)
         var errorDescription: String? {
             switch self {
-            case .scriptMislukt(let m):
+            case .scriptFailed(let m):
                 return String(format: t("mail.error.noAnswer"), m)
             }
         }
     }
 
     let account: String
-    let postvak: String
+    let mailbox: String
 
     private static let US = "\u{1F}"
 
     /// Turns free text into an AppleScript string literal, quotes and all. Account and
     /// mailbox names come from text fields: without this, a name containing a quote or a
     /// backslash breaks the whole script.
-    static func asTekenreeks(_ s: String) -> String {
+    static func asString(_ s: String) -> String {
         var t = s.replacingOccurrences(of: "\\", with: "\\\\")
         t = t.replacingOccurrences(of: "\"", with: "\\\"")
         // A real line break inside a string literal is a syntax error in AppleScript.
@@ -50,19 +50,19 @@ struct Postvak {
         try p.run()
         inPipe.fileHandleForWriting.write(Data(script.utf8))
         inPipe.fileHandleForWriting.closeFile()
-        let uit = outPipe.fileHandleForReading.readDataToEndOfFile()
-        let fout = errPipe.fileHandleForReading.readDataToEndOfFile()
+        let outcome = outPipe.fileHandleForReading.readDataToEndOfFile()
+        let error = errPipe.fileHandleForReading.readDataToEndOfFile()
         p.waitUntilExit()
         if p.terminationStatus != 0 {
-            throw Fout.scriptMislukt(String(data: fout, encoding: .utf8) ?? t("mail.error.unknown"))
+            throw Problem.scriptFailed(String(data: error, encoding: .utf8) ?? t("mail.error.unknown"))
         }
-        return String(data: uit, encoding: .utf8) ?? ""
+        return String(data: outcome, encoding: .utf8) ?? ""
     }
 
     /// Metadata of the most recent messages. No body text -- that is fetched per message.
-    func recent(dagen: Int, limiet: Int) throws -> [Bericht] {
-        let accountTekst = Postvak.asTekenreeks(account)
-        let postvakTekst = Postvak.asTekenreeks(postvak)
+    func recent(days: Int, limit: Int) throws -> [Message] {
+        let accountText = Mailbox.asString(account)
+        let mailboxText = Mailbox.asString(mailbox)
         let script = """
         on isoDatum(d)
             set j to year of d
@@ -76,14 +76,14 @@ struct Postvak {
         end pad
 
         set US to (ASCII character 31)
-        set grens to (current date) - (\(dagen) * days)
+        set grens to (current date) - (\(days) * days)
         tell application "Mail"
-            set acc to first account whose name is \(accountTekst)
-            set mb to mailbox \(postvakTekst) of acc
+            set acc to first account whose name is \(accountText)
+            set mb to mailbox \(mailboxText) of acc
             set berichten to (messages of mb whose date received ≥ grens)
             set uit to {}
             set n to count of berichten
-            if n > \(limiet) then set n to \(limiet)
+            if n > \(limit) then set n to \(limit)
             repeat with i from 1 to n
                 set m to item i of berichten
                 try
@@ -105,22 +105,22 @@ struct Postvak {
         set AppleScript's text item delimiters to ""
         return r
         """
-        return try Postvak.osascript(script).split(separator: "\n").compactMap { regel in
-            let d = regel.components(separatedBy: Postvak.US)
+        return try Mailbox.osascript(script).split(separator: "\n").compactMap { line in
+            let d = line.components(separatedBy: Mailbox.US)
             guard d.count >= 5 else { return nil }
-            return Bericht(id: d[0], datum: d[1], afzender: d[2], onderwerp: d[3],
-                           gelezen: d[4].lowercased() == "true")
+            return Message(id: d[0], date: d[1], sender: d[2], subject: d[3],
+                           wasRead: d[4].lowercased() == "true")
         }
     }
 
     /// The body of one message, stripped of markup and of what you cannot see.
-    func inhoud(van id: String) throws -> String {
-        let accountTekst = Postvak.asTekenreeks(account)
-        let postvakTekst = Postvak.asTekenreeks(postvak)
+    func content(from id: String) throws -> String {
+        let accountText = Mailbox.asString(account)
+        let mailboxText = Mailbox.asString(mailbox)
         let script = """
         tell application "Mail"
-            set acc to first account whose name is \(accountTekst)
-            set mb to mailbox \(postvakTekst) of acc
+            set acc to first account whose name is \(accountText)
+            set mb to mailbox \(mailboxText) of acc
             set treffers to (messages of mb whose id is \(id))
             if (count of treffers) is 0 then return ""
             try
@@ -130,32 +130,32 @@ struct Postvak {
             end try
         end tell
         """
-        return Sanering.schoon(try Postvak.osascript(script))
+        return Cleanup.clean(try Mailbox.osascript(script))
     }
 }
 
 /// Removes the hiding places instructions use in email: markup, invisible characters,
 /// and unbounded length.
-enum Sanering {
-    static func schoon(_ ruw: String, max: Int = 4000) -> String {
-        var tekst = ruw
-        if tekst.contains("<") && tekst.contains(">") {
-            tekst = tekst.replacingOccurrences(of: "<[^>]+>", with: " ", options: .regularExpression)
+enum Cleanup {
+    static func clean(_ raw: String, max: Int = 4000) -> String {
+        var text = raw
+        if text.contains("<") && text.contains(">") {
+            text = text.replacingOccurrences(of: "<[^>]+>", with: " ", options: .regularExpression)
         }
-        tekst = tekst.precomposedStringWithCompatibilityMapping
-        tekst = String(tekst.unicodeScalars.filter { s in
+        text = text.precomposedStringWithCompatibilityMapping
+        text = String(text.unicodeScalars.filter { s in
             if s == "\n" || s == "\t" { return true }
             // drop formatting and control characters: zero-width spaces, bidi overrides
             return !(s.properties.generalCategory == .format
                      || s.properties.generalCategory == .control
                      || s.properties.generalCategory == .privateUse)
         }.map(Character.init))
-        tekst = tekst.replacingOccurrences(of: "[ \\t]+", with: " ", options: .regularExpression)
-        tekst = tekst.replacingOccurrences(of: "\n{3,}", with: "\n\n", options: .regularExpression)
-        tekst = tekst.trimmingCharacters(in: .whitespacesAndNewlines)
-        if tekst.count > max {
-            tekst = String(tekst.prefix(max)) + t("mail.truncated")
+        text = text.replacingOccurrences(of: "[ \\t]+", with: " ", options: .regularExpression)
+        text = text.replacingOccurrences(of: "\n{3,}", with: "\n\n", options: .regularExpression)
+        text = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        if text.count > max {
+            text = String(text.prefix(max)) + t("mail.truncated")
         }
-        return tekst
+        return text
     }
 }

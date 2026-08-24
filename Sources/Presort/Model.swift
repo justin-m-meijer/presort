@@ -4,78 +4,78 @@ import Foundation
 /// The model is deliberately offered NO tools here -- text in, text out. An instruction hidden
 /// inside an email can therefore produce a wrong form at worst, never an action.
 struct ModelClient {
-    let eindpunt: String
-    let sleutel: String
+    let endpoint: String
+    let key: String
     let model: String
 
-    enum Fout: LocalizedError {
-        case ongeldigAdres(String)
-        case geenAntwoord
+    enum Problem: LocalizedError {
+        case badAddress(String)
+        case emptyAnswer
         case http(Int, String)
 
         var errorDescription: String? {
             switch self {
-            case .ongeldigAdres(let a):
+            case .badAddress(let a):
                 return String(format: t("model.error.badAddress"), a)
-            case .geenAntwoord: return t("model.error.empty")
-            case .http(let code, let tekst):
-                return String(format: t("model.error.http"), code, tekst)
+            case .emptyAnswer: return t("model.error.empty")
+            case .http(let code, let text):
+                return String(format: t("model.error.http"), code, text)
             }
         }
     }
 
-    func vraag(systeem: String, gebruiker: String, maxTokens: Int = 400) async throws -> String {
-        let basis = eindpunt.hasSuffix("/") ? String(eindpunt.dropLast()) : eindpunt
-        guard let url = URL(string: basis + "/chat/completions") else {
-            throw Fout.ongeldigAdres(eindpunt)
+    func ask(system: String, user: String, maxTokens: Int = 400) async throws -> String {
+        let base = endpoint.hasSuffix("/") ? String(endpoint.dropLast()) : endpoint
+        guard let url = URL(string: base + "/chat/completions") else {
+            throw Problem.badAddress(endpoint)
         }
 
         var req = URLRequest(url: url)
         req.httpMethod = "POST"
         req.timeoutInterval = 180
         req.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        if !sleutel.isEmpty {
-            req.setValue("Bearer \(sleutel)", forHTTPHeaderField: "Authorization")
+        if !key.isEmpty {
+            req.setValue("Bearer \(key)", forHTTPHeaderField: "Authorization")
         }
 
-        let lichaam: [String: Any] = [
+        let bodyText: [String: Any] = [
             "model": model,
             "temperature": 0,
             "max_tokens": maxTokens,
             "messages": [
-                ["role": "system", "content": systeem],
-                ["role": "user", "content": gebruiker],
+                ["role": "system", "content": system],
+                ["role": "user", "content": user],
             ],
         ]
-        req.httpBody = try JSONSerialization.data(withJSONObject: lichaam)
+        req.httpBody = try JSONSerialization.data(withJSONObject: bodyText)
 
-        let (data, antwoord) = try await URLSession.shared.data(for: req)
-        if let h = antwoord as? HTTPURLResponse, !(200..<300).contains(h.statusCode) {
-            let tekst = String(data: data, encoding: .utf8) ?? ""
-            throw Fout.http(h.statusCode, String(tekst.prefix(200)))
+        let (data, answer) = try await URLSession.shared.data(for: req)
+        if let h = answer as? HTTPURLResponse, !(200..<300).contains(h.statusCode) {
+            let text = String(data: data, encoding: .utf8) ?? ""
+            throw Problem.http(h.statusCode, String(text.prefix(200)))
         }
 
         guard
             let root = try JSONSerialization.jsonObject(with: data) as? [String: Any],
-            let keuzes = root["choices"] as? [[String: Any]],
-            let bericht = keuzes.first?["message"] as? [String: Any],
-            let inhoud = bericht["content"] as? String,
-            !inhoud.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-        else { throw Fout.geenAntwoord }
+            let choices = root["choices"] as? [[String: Any]],
+            let message = choices.first?["message"] as? [String: Any],
+            let content = message["content"] as? String,
+            !content.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        else { throw Problem.emptyAnswer }
 
-        return inhoud
+        return content
     }
 
     /// Pulls the JSON object out of an answer that may have wrapped prose around it.
-    static func jsonUit(_ ruw: String) -> [String: Any]? {
-        var t = ruw.trimmingCharacters(in: .whitespacesAndNewlines)
+    static func jsonFrom(_ raw: String) -> [String: Any]? {
+        var t = raw.trimmingCharacters(in: .whitespacesAndNewlines)
         if let start = t.range(of: "```") {
             t = String(t[start.upperBound...])
             if t.hasPrefix("json") { t = String(t.dropFirst(4)) }
-            if let eind = t.range(of: "```") { t = String(t[..<eind.lowerBound]) }
+            if let end = t.range(of: "```") { t = String(t[..<end.lowerBound]) }
         }
         guard let a = t.firstIndex(of: "{"), let b = t.lastIndex(of: "}"), a < b else { return nil }
-        let blok = String(t[a...b])
-        return (try? JSONSerialization.jsonObject(with: Data(blok.utf8))) as? [String: Any]
+        let block = String(t[a...b])
+        return (try? JSONSerialization.jsonObject(with: Data(block.utf8))) as? [String: Any]
     }
 }
