@@ -1,8 +1,8 @@
 import Foundation
 
-/// Leest Mail.app via AppleScript. Zo is er geen wachtwoord nodig: de gebruiker
-/// is er al ingelogd. Prijs daarvoor is dat Mail moet draaien -- IMAP komt later
-/// als tweede weg, voor wie Mail niet gebruikt.
+/// Reads Mail.app through AppleScript, so no password is needed: the user is already
+/// signed in there. The price is that Mail has to be running -- IMAP may follow as a
+/// second route for people who do not use Mail.
 struct Postvak {
     struct Bericht: Identifiable, Hashable {
         let id: String
@@ -17,7 +17,7 @@ struct Postvak {
         var errorDescription: String? {
             switch self {
             case .scriptMislukt(let m):
-                return "Mail gaf geen antwoord. \(m)"
+                return "Mail did not answer. \(m)"
             }
         }
     }
@@ -27,13 +27,13 @@ struct Postvak {
 
     private static let US = "\u{1F}"
 
-    /// Zet vrije tekst om in een AppleScript-tekenreeks, aanhalingstekens en al.
-    /// Account- en postvaknaam komen uit invoervelden: zonder dit breekt een naam
-    /// met een aanhalingsteken of een backslash het hele script.
+    /// Turns free text into an AppleScript string literal, quotes and all. Account and
+    /// mailbox names come from text fields: without this, a name containing a quote or a
+    /// backslash breaks the whole script.
     static func asTekenreeks(_ s: String) -> String {
         var t = s.replacingOccurrences(of: "\\", with: "\\\\")
         t = t.replacingOccurrences(of: "\"", with: "\\\"")
-        // Een echte regelovergang in een tekenreeks is een syntaxfout in AppleScript.
+        // A real line break inside a string literal is a syntax error in AppleScript.
         t = t.replacingOccurrences(of: "\r\n", with: "\\n")
         t = t.replacingOccurrences(of: "\n", with: "\\n")
         t = t.replacingOccurrences(of: "\r", with: "\\r")
@@ -54,12 +54,12 @@ struct Postvak {
         let fout = errPipe.fileHandleForReading.readDataToEndOfFile()
         p.waitUntilExit()
         if p.terminationStatus != 0 {
-            throw Fout.scriptMislukt(String(data: fout, encoding: .utf8) ?? "onbekende fout")
+            throw Fout.scriptMislukt(String(data: fout, encoding: .utf8) ?? "unknown error")
         }
         return String(data: uit, encoding: .utf8) ?? ""
     }
 
-    /// Metadata van de recentste berichten. Geen inhoud -- die wordt pas per bericht opgehaald.
+    /// Metadata of the most recent messages. No body text -- that is fetched per message.
     func recent(dagen: Int, limiet: Int) throws -> [Bericht] {
         let accountTekst = Postvak.asTekenreeks(account)
         let postvakTekst = Postvak.asTekenreeks(postvak)
@@ -113,7 +113,7 @@ struct Postvak {
         }
     }
 
-    /// De inhoud van één bericht, ontdaan van opmaak en van wat je niet ziet.
+    /// The body of one message, stripped of markup and of what you cannot see.
     func inhoud(van id: String) throws -> String {
         let accountTekst = Postvak.asTekenreeks(account)
         let postvakTekst = Postvak.asTekenreeks(postvak)
@@ -134,8 +134,8 @@ struct Postvak {
     }
 }
 
-/// Haalt de schuilplaatsen weg waar instructies zich in e-mail verstoppen:
-/// opmaak, onzichtbare tekens, en eindeloze lengte.
+/// Removes the hiding places instructions use in email: markup, invisible characters,
+/// and unbounded length.
 enum Sanering {
     static func schoon(_ ruw: String, max: Int = 4000) -> String {
         var t = ruw
@@ -145,7 +145,7 @@ enum Sanering {
         t = t.precomposedStringWithCompatibilityMapping
         t = String(t.unicodeScalars.filter { s in
             if s == "\n" || s == "\t" { return true }
-            // opmaak- en stuurtekens weg: zero-width spaties, bidi-overrides
+            // drop formatting and control characters: zero-width spaces, bidi overrides
             return !(s.properties.generalCategory == .format
                      || s.properties.generalCategory == .control
                      || s.properties.generalCategory == .privateUse)
@@ -154,7 +154,7 @@ enum Sanering {
         t = t.replacingOccurrences(of: "\n{3,}", with: "\n\n", options: .regularExpression)
         t = t.trimmingCharacters(in: .whitespacesAndNewlines)
         if t.count > max {
-            t = String(t.prefix(max)) + "\n… (ingekort)"
+            t = String(t.prefix(max)) + "\n… (truncated)"
         }
         return t
     }

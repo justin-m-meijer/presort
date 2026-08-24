@@ -1,9 +1,8 @@
 import Foundation
 
-/// Praat met elk eindpunt dat de OpenAI-vorm spreekt: Ollama, vLLM, LiteLLM, een clouddienst.
-/// Het model krijgt hier bewust GEEN gereedschap aangeboden -- alleen tekst in, tekst uit.
-/// Een instructie die in een e-mail verstopt zit kan daardoor hooguit een verkeerd
-/// formulier opleveren, geen handeling.
+/// Talks to any endpoint that speaks the OpenAI shape: Ollama, vLLM, LiteLLM, a hosted service.
+/// The model is deliberately offered NO tools here -- text in, text out. An instruction hidden
+/// inside an email can therefore produce a wrong form at worst, never an action.
 struct ModelClient {
     let eindpunt: String
     let sleutel: String
@@ -16,10 +15,10 @@ struct ModelClient {
 
         var errorDescription: String? {
             switch self {
-            case .ongeldigAdres(let a): return "Het adres '\(a)' is geen geldige URL."
-            case .geenAntwoord: return "Het model gaf een leeg antwoord."
+            case .ongeldigAdres(let a): return "The address '\(a)' is not a valid URL."
+            case .geenAntwoord: return "The model returned an empty answer."
             case .http(let code, let tekst):
-                return "Het model antwoordde met code \(code). \(tekst)"
+                return "The model answered with code \(code). \(tekst)"
             }
         }
     }
@@ -66,7 +65,7 @@ struct ModelClient {
         return inhoud
     }
 
-    /// Haalt het JSON-object uit een antwoord dat er ook proza omheen kan hebben gezet.
+    /// Pulls the JSON object out of an answer that may have wrapped prose around it.
     static func jsonUit(_ ruw: String) -> [String: Any]? {
         var t = ruw.trimmingCharacters(in: .whitespacesAndNewlines)
         if let start = t.range(of: "```") {

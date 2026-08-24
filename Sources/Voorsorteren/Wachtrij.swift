@@ -1,8 +1,8 @@
 import Foundation
 
-/// Wat de app heeft gevonden, en wat de gebruiker daarmee deed.
-/// Een besluit wist een voorstel niet -- het zet er een status naast. Zo blijft
-/// zichtbaar wat er is voorgesteld, ook wat je hebt weggegooid.
+/// What the app found, and what the user did with it. A decision does not erase a
+/// proposal -- it puts a status next to it, so what was proposed stays visible, including
+/// the things you threw away.
 struct Voorstel: Identifiable, Codable, Hashable {
     enum Soort: String, Codable { case afspraak, herinnering, overgeslagen }
     enum Status: String, Codable { case open, goedgekeurd, geweigerd, mislukt }
@@ -27,13 +27,13 @@ struct Voorstel: Identifiable, Codable, Hashable {
     var itemId: String = ""       // na goedkeuring: het aangemaakte item
     var fout: String = ""
 
-    /// Welk punt dit vond. Optioneel, en dat is opzet: voorstellen van vóór de
-    /// instelbare punten missen het veld, en een niet-optioneel veld zou het
-    /// hele opgeslagen bestand onleesbaar maken.
+    /// Which detector found this. Optional on purpose: proposals from before the
+    /// configurable detectors lack the field, and a non-optional one would make the whole
+    /// saved file unreadable.
     var herkenner: String?
 
-    /// Hoe zeker het model zei te zijn: "hoog", "midden" of "laag". Om dezelfde
-    /// reden optioneel. Alleen "hoog" mag er vanzelf in.
+    /// How certain the model said it was: "hoog", "midden" or "laag". Optional for the
+    /// same reason. Only "hoog" may be filed automatically.
     var zekerheid: String?
 }
 
@@ -41,21 +41,21 @@ struct Voorstel: Identifiable, Codable, Hashable {
 final class Wachtrij: ObservableObject {
     @Published private(set) var items: [Voorstel] = []
 
-    /// De nagekeken berichten-ids, oudste eerst. De volgorde is het punt: bij het
-    /// snoeien moeten de oudste eruit, en een Set heeft geen volgorde -- die gooide
-    /// willekeurige ids weg, waarna die berichten opnieuw langs het model gingen.
+    /// Ids of messages already checked, oldest first. The order is the point: pruning has
+    /// to drop the oldest, and a Set has no order -- it threw away random ids, after which
+    /// those messages went past the model all over again.
     @Published private(set) var geziene: [String] = []
 
-    /// Alleen om snel te kunnen opzoeken; loopt altijd gelijk met `geziene`.
+    /// Only for fast lookup; always kept in step with `geziene`.
     private var gezienSnel: Set<String> = []
 
-    /// Boven `maxGeziene` wordt er teruggesnoeid tot `behoudGeziene`, oudste eerst.
+    /// Above `maxGeziene` it is pruned back to `behoudGeziene`, oldest first.
     private static let maxGeziene = 3000
     private static let behoudGeziene = 2000
 
     private let bestand: URL
 
-    /// `map` is er voor de proeven, zodat die niet in de echte wachtrij graaien.
+    /// `map` exists for the tests, so they do not rummage through the real queue.
     init(map: URL? = nil) {
         let map = map ?? FileManager.default
             .urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
@@ -88,17 +88,16 @@ final class Wachtrij: ObservableObject {
         bewaar()
     }
 
-    /// Houdt de lijst binnen de perken zonder de volgorde te verliezen.
+    /// Keeps the list bounded without losing the ordering.
     private func snoeiGeziene() {
         guard geziene.count > Wachtrij.maxGeziene else { return }
         geziene.removeFirst(geziene.count - Wachtrij.behoudGeziene)
         gezienSnel = Set(geziene)
     }
 
-    /// Vergeet welke berichten al zijn nagekeken, zodat ze opnieuw langs het
-    /// model gaan. Nodig zodra je een omschrijving hebt bijgesteld: anders zie
-    /// je nooit of je verbetering werkt, want al gezien is al gezien. De
-    /// voorstellen zelf blijven staan.
+    /// Forget which messages have already been checked, so they go past the model again.
+    /// Needed as soon as you adjust a description: otherwise you never see whether your
+    /// improvement works, because seen is seen. The proposals themselves stay.
     func vergeetGeziene() {
         geziene.removeAll()
         gezienSnel.removeAll()
@@ -117,7 +116,7 @@ final class Wachtrij: ObservableObject {
         bewaar()
     }
 
-    // MARK: bewaren
+    // MARK: persistence
 
     private struct Schijf: Codable {
         var items: [Voorstel]
@@ -141,8 +140,8 @@ final class Wachtrij: ObservableObject {
         d.dateDecodingStrategy = .iso8601
         guard let s = try? d.decode(Schijf.self, from: data) else { return }
         items = s.items
-        // Een oud bestand komt uit een Set en is dus ongeordend; wat erin staat
-        // klopt nog wel. Dubbelen eruit, de rest houdt de volgorde van het bestand.
+        // An older file came from a Set and is therefore unordered; its contents are still
+        // correct. Drop duplicates, the rest keeps the order of the file.
         geziene = []
         gezienSnel = []
         for id in s.geziene where gezienSnel.insert(id).inserted {

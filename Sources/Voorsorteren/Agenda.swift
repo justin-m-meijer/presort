@@ -1,10 +1,9 @@
 import EventKit
 import Foundation
 
-/// Schrijft uitsluitend in een eigen agenda en een eigen herinneringenlijst.
-/// De bestaande agenda's van de gebruiker worden gelezen maar nooit aangeraakt:
-/// wat de app voorstelt staat apart, en verslepen naar een echte agenda is de
-/// manier waarop de gebruiker het overneemt.
+/// Writes only into a calendar and a reminder list of its own. The user's existing
+/// calendars are read but never touched: what the app proposes stays separate, and
+/// dragging it into a real calendar is how the user accepts it.
 actor Agenda {
     private let store = EKEventStore()
     private let naam: String
@@ -19,9 +18,9 @@ actor Agenda {
         var errorDescription: String? {
             switch self {
             case .geenToegang(let wat):
-                return "Geen toegang tot \(wat). Zet dat aan in Systeeminstellingen › Privacy en beveiliging."
-            case .geenBron: return "Geen account gevonden om de lijst in te maken."
-            case .opslaanMislukt(let m): return "Opslaan mislukte. \(m)"
+                return "No access to \(wat). Enable it in System Settings › Privacy & Security."
+            case .geenBron: return "No account found to create the list in."
+            case .opslaanMislukt(let m): return "Saving failed. \(m)"
             }
         }
     }
@@ -31,17 +30,17 @@ actor Agenda {
             throw Fout.geenToegang("Agenda")
         }
         if try await store.requestFullAccessToReminders() == false {
-            throw Fout.geenToegang("Herinneringen")
+            throw Fout.geenToegang("Reminders")
         }
     }
 
-    /// Eigen agenda, aangemaakt als hij nog niet bestaat.
+    /// Our own calendar, created if it does not exist yet.
     private func eigenAgenda() throws -> EKCalendar {
         if let bestaand = store.calendars(for: .event).first(where: { $0.title == naam }) {
             return bestaand
         }
-        // De bron kiezen op wat hij aantoonbaar kan, niet op zijn naam: een account
-        // kan agenda's aankunnen en herinneringen niet, en beide heten vaak "iCloud".
+        // Pick the source by what it demonstrably supports rather than by its name: an
+        // account may handle calendars but not reminders, and both are often called "iCloud".
         guard let bron = store.sources.first(where: { !$0.calendars(for: .event).isEmpty }) else {
             throw Fout.geenBron
         }
@@ -89,14 +88,14 @@ actor Agenda {
         r.notes = notitie
         r.calendar = try eigenLijst()
         if let d = uiterlijk {
-            // De uiterste datum blijft de uiterste datum -- die staat in de lijst
-            // en die wil je zien. Het seintje komt eerder: op de laatste dag is
-            // een pakket terugsturen meestal niet meer te doen.
+            // The deadline stays the deadline -- that is what shows in the list and what
+            // you want to see. The alert comes earlier: on the final day, getting a parcel
+            // back is usually no longer possible.
             r.dueDateComponents = Calendar.current.dateComponents(
                 [.year, .month, .day, .hour, .minute], from: d)
-            // Ligt dat moment al achter ons, dan geeft `seintje` nil terug en is
-            // de uiterste datum zelf het enige dat nog helpt. Het venster toont
-            // dezelfde som, dus wat daar staat is wat hier gebeurt.
+            // If that moment has already passed, `seintje` returns nil and the deadline
+            // itself is all that is left. The window shows the same calculation, so what it
+            // says is what happens here.
             if let wek = Datums.seintje(uiterlijk: d, voorsprongDagen: voorsprongDagen) {
                 r.addAlarm(EKAlarm(absoluteDate: wek))
             }
@@ -106,8 +105,8 @@ actor Agenda {
         return r.calendarItemIdentifier
     }
 
-    /// Bestaat er al iets met deze titel rond dit tijdstip? Beschermt tegen dubbel
-    /// werk als de opgeslagen stand ooit kwijtraakt.
+    /// Does something with this title already exist around this time? Guards against
+    /// duplicate work if the saved state is ever lost.
     func heeftAfspraak(titel: String, begin: Date) -> Bool {
         store.reset()
         guard let k = try? eigenAgenda() else { return false }
