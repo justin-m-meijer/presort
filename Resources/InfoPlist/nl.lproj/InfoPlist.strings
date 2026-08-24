@@ -1,0 +1,6 @@
+/* The three sentences macOS shows in its own permission dialogs. The frame around
+   them is the system language, so these have to follow it too. */
+
+"NSCalendarsFullAccessUsageDescription" = "Presort zet de afspraken die hij vindt in een eigen agenda. Je bestaande agenda’s worden gelezen maar nooit gewijzigd.";
+"NSRemindersFullAccessUsageDescription" = "Presort zet de taken die hij vindt in een eigen herinneringenlijst. Je bestaande lijsten blijven met rust.";
+"NSAppleEventsUsageDescription" = "Presort leest je post uit Mail om er afspraken en taken uit te halen. Er wordt niets verstuurd of verwijderd.";

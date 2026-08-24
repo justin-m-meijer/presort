@@ -15,6 +15,10 @@ cp ".build/release/$NAME" "$APP/Contents/MacOS/$NAME"
 cp "Resources/$NAME.icns" "$APP/Contents/Resources/$NAME.icns"
 # The string catalogue SwiftPM generates. Without this the app falls back to raw keys.
 cp -R ".build/release/${NAME}_${NAME}.bundle" "$APP/Contents/Resources/"
+# The permission dialogs are drawn by macOS, in the system language. Their sentences have to
+# sit in the app bundle itself -- the catalogue inside the SwiftPM bundle is never consulted
+# for them.
+cp -R Resources/InfoPlist/*.lproj "$APP/Contents/Resources/"
 
 cat > "$APP/Contents/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
@@ -30,6 +34,9 @@ cat > "$APP/Contents/Info.plist" <<PLIST
   <key>CFBundleShortVersionString</key><string>$VERSION</string>
   <key>CFBundleVersion</key><string>$VERSION</string>
   <key>LSMinimumSystemVersion</key><string>14.0</string>
+  <key>CFBundleDevelopmentRegion</key><string>en</string>
+  <key>CFBundleLocalizations</key>
+  <array><string>en</string><string>nl</string><string>fr</string><string>de</string></array>
   <key>NSHighResolutionCapable</key><true/>
   <key>LSApplicationCategoryType</key><string>public.app-category.productivity</string>
 

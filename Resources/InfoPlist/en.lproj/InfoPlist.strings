@@ -1,0 +1,6 @@
+/* The three sentences macOS shows in its own permission dialogs. The frame around
+   them is the system language, so these have to follow it too. */
+
+"NSCalendarsFullAccessUsageDescription" = "Presort puts the appointments it finds into a calendar of its own. Your existing calendars are read but never changed.";
+"NSRemindersFullAccessUsageDescription" = "Presort puts the tasks it finds into a reminder list of its own. Your existing lists are left alone.";
+"NSAppleEventsUsageDescription" = "Presort reads your mail from Mail to pull appointments and tasks out of it. Nothing is sent or deleted.";
