@@ -59,7 +59,7 @@ final class Wachtrij: ObservableObject {
     init(map: URL? = nil) {
         let map = map ?? FileManager.default
             .urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-            .appendingPathComponent("Voorsorteren", isDirectory: true)
+            .appendingPathComponent("Presort", isDirectory: true)
         try? FileManager.default.createDirectory(at: map, withIntermediateDirectories: true)
         bestand = map.appendingPathComponent("voorstellen.json")
         laad()

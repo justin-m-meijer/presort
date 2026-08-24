@@ -6,7 +6,7 @@ cd "$(dirname "$0")"
 UIT=$(mktemp -d)
 trap 'rm -rf "$UIT"' EXIT
 swiftc -o "$UIT/proef" \
-    Sources/Voorsorteren/Herkenners.swift \
-    Sources/Voorsorteren/Wachtrij.swift \
+    Sources/Presort/Herkenners.swift \
+    Sources/Presort/Wachtrij.swift \
     Proef/main.swift
 "$UIT/proef"

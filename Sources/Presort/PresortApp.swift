@@ -2,11 +2,11 @@ import AppKit
 import SwiftUI
 
 @main
-struct VoorsorterenApp: App {
+struct PresortApp: App {
     @StateObject private var kern = Kern()
 
     var body: some Scene {
-        WindowGroup("Voorsorteren", id: Vensters.hoofd) {
+        WindowGroup("Presort", id: Vensters.hoofd) {
             Hoofdvenster(kern: kern)
                 .environmentObject(kern.instellingen)
                 .environmentObject(kern.wachtrij)
@@ -56,7 +56,7 @@ struct Hoofdvenster: View {
     private var balk: some View {
         HStack(spacing: 12) {
             VStack(alignment: .leading, spacing: 1) {
-                Text("Voorsorteren").font(.system(size: 15, weight: .semibold))
+                Text("Presort").font(.system(size: 15, weight: .semibold))
                 Text(melding.isEmpty
                      ? "\(wachtrij.open.count) wachten op je"
                      : melding)
@@ -173,7 +173,7 @@ struct Menubalk: View {
         SettingsLink { Text("Instellingen…") }
 
         Divider()
-        Button("Stop Voorsorteren") { NSApp.terminate(nil) }
+        Button("Quit Presort") { NSApp.terminate(nil) }
     }
 
     private var kopregel: String {
@@ -347,7 +347,7 @@ struct Uitleg: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             Text("Nog niet ingericht").font(.system(size: 13, weight: .semibold))
-            Text("Voorsorteren praat met elk model dat de OpenAI-vorm spreekt — Ollama op deze "
+            Text("Presort talks to any model that speaks the OpenAI shape — Ollama on this "
                  + "Mac, een server bij je thuis, of een clouddienst. Vul bij Instellingen het "
                  + "adres en de naam van het model in.")
                 .font(.system(size: 12)).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)

@@ -138,7 +138,7 @@ final class Instellingen: ObservableObject {
         account = lees("account", "iCloud")
         postvak = lees("postvak", "INBOX")
         dagen = Int(lees("dagen", "3")) ?? 3
-        agendaNaam = lees("agendaNaam", "Voorsorteren")
+        agendaNaam = lees("agendaNaam", "Presort")
         alleenHogeZekerheid = lees("zekerheid", "1") == "1"
         zetZelfIn = lees("zetZelfIn", "0") == "1"
         voorsprongDagen = Int(lees("voorsprong", "3")) ?? 3

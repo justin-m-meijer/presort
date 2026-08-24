@@ -2,12 +2,12 @@
 import PackageDescription
 
 let package = Package(
-    name: "Voorsorteren",
+    name: "Presort",
     platforms: [.macOS(.v14)],
     targets: [
         .executableTarget(
-            name: "Voorsorteren",
-            path: "Sources/Voorsorteren",
+            name: "Presort",
+            path: "Sources/Presort",
             linkerSettings: [
                 .linkedFramework("EventKit"),
                 .linkedFramework("AppKit"),

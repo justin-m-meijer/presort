@@ -52,7 +52,7 @@ final class Wekker: ObservableObject {
 /// you would still have to go and look whether anything was found.
 enum Meldingen {
     /// Without a bundle id there is no notification centre -- which happens when the
-    /// binary is launched on its own instead of from Voorsorteren.app.
+    /// binary is launched on its own instead of from Presort.app.
     private static var kan: Bool { Bundle.main.bundleIdentifier != nil }
 
     static func vraagToestemming() async {
