@@ -5,9 +5,8 @@ import Foundation
 /// the things you threw away.
 struct Voorstel: Identifiable, Codable, Hashable {
     enum Soort: String, Codable { case afspraak, herinnering, overgeslagen }
-    /// De rawValue blijft Nederlands: die staat zo in het opgeslagen bestand, en
-    /// hernoemen zou elk bestaand voorstel onleesbaar maken. Voor het scherm is er
-    /// `getoond`.
+    /// The rawValue stays as it is: that is how it sits in the stored file, and renaming
+    /// it would make every existing proposal unreadable. For the screen there is `getoond`.
     enum Status: String, Codable {
         case open, goedgekeurd, geweigerd, mislukt
 
@@ -38,8 +37,8 @@ struct Voorstel: Identifiable, Codable, Hashable {
     var bedrag: String = ""
     var notitie: String = ""
 
-    var reden: String = ""        // bij overgeslagen: waarom er niets in zat
-    var itemId: String = ""       // na goedkeuring: het aangemaakte item
+    var reden: String = ""        // when skipped: why there was nothing in it
+    var itemId: String = ""       // after approval: the item that was created
     var fout: String = ""
 
     /// Which detector found this. Optional on purpose: proposals from before the

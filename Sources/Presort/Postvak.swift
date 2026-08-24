@@ -17,7 +17,7 @@ struct Postvak {
         var errorDescription: String? {
             switch self {
             case .scriptMislukt(let m):
-                return "Mail did not answer. \(m)"
+                return String(format: t("mail.error.noAnswer"), m)
             }
         }
     }
@@ -54,7 +54,7 @@ struct Postvak {
         let fout = errPipe.fileHandleForReading.readDataToEndOfFile()
         p.waitUntilExit()
         if p.terminationStatus != 0 {
-            throw Fout.scriptMislukt(String(data: fout, encoding: .utf8) ?? "unknown error")
+            throw Fout.scriptMislukt(String(data: fout, encoding: .utf8) ?? t("mail.error.unknown"))
         }
         return String(data: uit, encoding: .utf8) ?? ""
     }
@@ -138,24 +138,24 @@ struct Postvak {
 /// and unbounded length.
 enum Sanering {
     static func schoon(_ ruw: String, max: Int = 4000) -> String {
-        var t = ruw
-        if t.contains("<") && t.contains(">") {
-            t = t.replacingOccurrences(of: "<[^>]+>", with: " ", options: .regularExpression)
+        var tekst = ruw
+        if tekst.contains("<") && tekst.contains(">") {
+            tekst = tekst.replacingOccurrences(of: "<[^>]+>", with: " ", options: .regularExpression)
         }
-        t = t.precomposedStringWithCompatibilityMapping
-        t = String(t.unicodeScalars.filter { s in
+        tekst = tekst.precomposedStringWithCompatibilityMapping
+        tekst = String(tekst.unicodeScalars.filter { s in
             if s == "\n" || s == "\t" { return true }
             // drop formatting and control characters: zero-width spaces, bidi overrides
             return !(s.properties.generalCategory == .format
                      || s.properties.generalCategory == .control
                      || s.properties.generalCategory == .privateUse)
         }.map(Character.init))
-        t = t.replacingOccurrences(of: "[ \\t]+", with: " ", options: .regularExpression)
-        t = t.replacingOccurrences(of: "\n{3,}", with: "\n\n", options: .regularExpression)
-        t = t.trimmingCharacters(in: .whitespacesAndNewlines)
-        if t.count > max {
-            t = String(t.prefix(max)) + "\n… (truncated)"
+        tekst = tekst.replacingOccurrences(of: "[ \\t]+", with: " ", options: .regularExpression)
+        tekst = tekst.replacingOccurrences(of: "\n{3,}", with: "\n\n", options: .regularExpression)
+        tekst = tekst.trimmingCharacters(in: .whitespacesAndNewlines)
+        if tekst.count > max {
+            tekst = String(tekst.prefix(max)) + t("mail.truncated")
         }
-        return t
+        return tekst
     }
 }

@@ -256,7 +256,7 @@ struct VoorstelKaart: View {
     }
 }
 
-/// Laat zien wat er straks in de agenda of de lijst staat, veld voor veld, met
+/// Shows what will end up in the calendar or the list, field by field, with
 /// the words that will actually be written. Before this the card showed what had been
 /// picked out of the mail -- which is a different thing from what you are agreeing to.
 struct Voorbeeld: View {
@@ -423,7 +423,7 @@ struct VanzelfTabblad: View {
     }
 }
 
-/// De lijst met punten waar de app op let, met de tekst erachter. Bewerkbaar is
+/// The list of points the app watches for, with the text behind each. Editable is
 /// only the description; the preamble and the form sit around it, uneditable, so that
 /// what is really being asked stays visible.
 struct HerkennersTabblad: View {
@@ -541,7 +541,7 @@ struct HerkennersTabblad: View {
     private func kop(_ h: Herkenner) -> some View {
         if h.eigen {
             // Your own points you may name entirely yourself; the built-in names
-            // zijn de woorden waarin de app over zichzelf praat.
+            // are the words in which the app talks about itself.
             TextField("Name", text: Binding(
                 get: { herkenners.alle.first { $0.id == h.id }?.naam ?? "" },
                 set: { herkenners.hernoem(h.id, naam: $0) }))

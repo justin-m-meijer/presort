@@ -168,7 +168,7 @@ final class Herkenners: ObservableObject {
         alle = lijst
     }
 
-    /// Is de ingebouwde tekst aangepast? Bepaalt of "herstel de standaard" nut heeft.
+    /// Has the built-in text been edited? Decides whether "restore the default" is of any use.
     func isAangepast(_ id: String) -> Bool {
         schijf.aanpassingen[id]?.instructie != nil
     }

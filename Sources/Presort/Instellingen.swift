@@ -14,24 +14,24 @@ enum Terugkijken: Int, CaseIterable, Identifiable {
 
     var naam: String {
         switch self {
-        case .week:      return "Last 7 days"
-        case .tweeWeken: return "Last 14 days"
-        case .maand:     return "Last month"
-        case .kwartaal:  return "Last quarter"
-        case .halfJaar:  return "Last six months"
-        case .jaar:      return "Last year"
+        case .week:      return t("lookback.week")
+        case .tweeWeken: return t("lookback.twoWeeks")
+        case .maand:     return t("lookback.month")
+        case .kwartaal:  return t("lookback.quarter")
+        case .halfJaar:  return t("lookback.halfYear")
+        case .jaar:      return t("lookback.year")
         }
     }
 
     /// Short enough for the toolbar.
     var kort: String {
         switch self {
-        case .week: return "7 days"
-        case .tweeWeken: return "14 days"
-        case .maand: return "1 month"
-        case .kwartaal: return "quarter"
-        case .halfJaar: return "6 months"
-        case .jaar: return "year"
+        case .week:      return t("lookback.short.week")
+        case .tweeWeken: return t("lookback.short.twoWeeks")
+        case .maand:     return t("lookback.short.month")
+        case .kwartaal:  return t("lookback.short.quarter")
+        case .halfJaar:  return t("lookback.short.halfYear")
+        case .jaar:      return t("lookback.short.year")
         }
     }
 
@@ -54,12 +54,12 @@ enum Ritme: Int, CaseIterable, Identifiable {
 
     var naam: String {
         switch self {
-        case .uit:      return "Only when I ask"
-        case .kwartier: return "Every 15 minutes"
-        case .halfUur:  return "Every half hour"
-        case .uur:      return "Every hour"
-        case .vierUur:  return "Every four hours"
-        case .dag:      return "Twice a day"
+        case .uit:      return t("rhythm.off")
+        case .kwartier: return t("rhythm.quarterHour")
+        case .halfUur:  return t("rhythm.halfHour")
+        case .uur:      return t("rhythm.hour")
+        case .vierUur:  return t("rhythm.fourHours")
+        case .dag:      return t("rhythm.twiceADay")
         }
     }
 
@@ -81,11 +81,11 @@ enum Voorsprong: Int, CaseIterable, Identifiable {
 
     var naam: String {
         switch self {
-        case .opDeDagZelf: return "On the day itself"
-        case .eenDag:      return "One day early"
-        case .tweeDagen:   return "Two days early"
-        case .drieDagen:   return "Three days early"
-        case .week:        return "One week early"
+        case .opDeDagZelf: return t("lead.sameDay")
+        case .eenDag:      return t("lead.oneDay")
+        case .tweeDagen:   return t("lead.twoDays")
+        case .drieDagen:   return t("lead.threeDays")
+        case .week:        return t("lead.week")
         }
     }
 

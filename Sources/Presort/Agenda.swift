@@ -18,19 +18,19 @@ actor Agenda {
         var errorDescription: String? {
             switch self {
             case .geenToegang(let wat):
-                return "No access to \(wat). Enable it in System Settings › Privacy & Security."
-            case .geenBron: return "No account found to create the list in."
-            case .opslaanMislukt(let m): return "Saving failed. \(m)"
+                return String(format: t("agenda.error.noAccess"), wat)
+            case .geenBron: return t("agenda.error.noSource")
+            case .opslaanMislukt(let m): return String(format: t("agenda.error.saveFailed"), m)
             }
         }
     }
 
     func vraagToegang() async throws {
         if try await store.requestFullAccessToEvents() == false {
-            throw Fout.geenToegang("Agenda")
+            throw Fout.geenToegang(t("agenda.permission.calendar"))
         }
         if try await store.requestFullAccessToReminders() == false {
-            throw Fout.geenToegang("Reminders")
+            throw Fout.geenToegang(t("agenda.permission.reminders"))
         }
     }
 

@@ -131,8 +131,7 @@ enum Inloggen {
             }
             return nil
         } catch {
-            return "Opening at login did not work. That usually requires the app to be in "
-                 + "the Applications folder. (\(error.localizedDescription))"
+            return String(format: t("login.failed"), error.localizedDescription)
         }
     }
 }

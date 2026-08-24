@@ -59,7 +59,7 @@ final class Kern: ObservableObject {
         // A run started by itself must not wake Mail: that would open an application you
         // had deliberately closed.
         if vanzelf && !Mail.draait {
-            melding = "Skipped: Mail is not running."
+            melding = t("run.mailNotRunning")
             return
         }
 
@@ -83,13 +83,15 @@ final class Kern: ObservableObject {
     /// already filed is not merely confusing, it is untrue.
     private func kopVoorMelding(_ uit: Scanner.Uitkomst, _ zelf: ZelfGedaan) -> String {
         if zelf.erin > 0 {
-            let erin = zelf.erin == 1 ? "1 thing filed" : "\(zelf.erin) things filed"
+            let erin = zelf.erin == 1
+                ? t("notify.filed.one")
+                : String(format: t("notify.filed.many"), zelf.erin)
             guard zelf.blijftWachten > 0 else { return erin }
-            return "\(erin), \(zelf.blijftWachten) still waiting for you"
+            return String(format: t("notify.filedAndWaiting"), erin, zelf.blijftWachten)
         }
         return uit.voorgesteld == 1
-            ? "Something is waiting for you"
-            : "\(uit.voorgesteld) things waiting for you"
+            ? t("notify.waiting.one")
+            : String(format: t("notify.waiting.many"), uit.voorgesteld)
     }
 
     private struct ZelfGedaan {
@@ -98,12 +100,14 @@ final class Kern: ObservableObject {
 
         var staart: String {
             guard erin > 0 || blijftWachten > 0 else { return "" }
-            var s = erin == 1 ? " Filed 1 by itself." : " Filed \(erin) by itself."
+            var s = erin == 1
+                ? t("tail.filed.one")
+                : String(format: t("tail.filed.many"), erin)
             if erin == 0 { s = "" }
             if blijftWachten > 0 {
                 s += blijftWachten == 1
-                    ? " 1 was not confident enough and is waiting for you."
-                    : " \(blijftWachten) were not confident enough and are waiting for you."
+                    ? t("tail.unsure.one")
+                    : String(format: t("tail.unsure.many"), blijftWachten)
             }
             return s
         }
@@ -145,7 +149,7 @@ final class Kern: ObservableObject {
             if v.soort == .afspraak {
                 guard let b = v.begin, let e = v.eind else { return }
                 if await agenda.heeftAfspraak(titel: v.titel, begin: b) {
-                    wachtrij.werkBij(v.id) { $0.status = .geweigerd; $0.fout = "already there" }
+                    wachtrij.werkBij(v.id) { $0.status = .geweigerd; $0.fout = t("status.alreadyThere") }
                     return
                 }
                 id = try await agenda.maakAfspraak(titel: v.titel, begin: b, eind: e,
@@ -167,7 +171,7 @@ final class Kern: ObservableObject {
         do {
             if v.soort == .afspraak { try await agenda.verwijder(afspraakId: v.itemId) }
             else { try await agenda.verwijder(herinneringId: v.itemId) }
-            wachtrij.werkBij(v.id) { $0.status = .geweigerd; $0.fout = "undone" }
+            wachtrij.werkBij(v.id) { $0.status = .geweigerd; $0.fout = t("status.undone") }
         } catch {
             melding = error.localizedDescription
         }

@@ -15,10 +15,11 @@ struct ModelClient {
 
         var errorDescription: String? {
             switch self {
-            case .ongeldigAdres(let a): return "The address '\(a)' is not a valid URL."
-            case .geenAntwoord: return "The model returned an empty answer."
+            case .ongeldigAdres(let a):
+                return String(format: t("model.error.badAddress"), a)
+            case .geenAntwoord: return t("model.error.empty")
             case .http(let code, let tekst):
-                return "The model answered with code \(code). \(tekst)"
+                return String(format: t("model.error.http"), code, tekst)
             }
         }
     }
