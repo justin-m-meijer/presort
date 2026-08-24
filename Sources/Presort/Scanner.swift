@@ -95,7 +95,7 @@ final class Scanner: ObservableObject {
 
             guard !tekst.isEmpty else {
                 // Wél gelezen, er stond alleen niets in. Dat is een oordeel.
-                noteerOvergeslagen(b, "geen leesbare inhoud")
+                noteerOvergeslagen(b, "no readable content")
                 wachtrij.markeerGezien(b.id)
                 uit.nagekeken += 1
                 continue
@@ -147,8 +147,8 @@ final class Scanner: ObservableObject {
                 uit.ids.append(v.id)
             } else {
                 noteerOvergeslagen(b, punten.count == 1
-                                   ? "geen \(punten[0].naam.lowercased())"
-                                   : "niets van de \(punten.count) punten")
+                                   ? "no \(punten[0].naam.lowercased())"
+                                   : "none of the \(punten.count) points")
             }
             wachtrij.markeerGezien(b.id)
             uit.nagekeken += 1

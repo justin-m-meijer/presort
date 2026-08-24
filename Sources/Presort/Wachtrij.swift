@@ -5,7 +5,22 @@ import Foundation
 /// the things you threw away.
 struct Voorstel: Identifiable, Codable, Hashable {
     enum Soort: String, Codable { case afspraak, herinnering, overgeslagen }
-    enum Status: String, Codable { case open, goedgekeurd, geweigerd, mislukt }
+    /// De rawValue blijft Nederlands: die staat zo in het opgeslagen bestand, en
+    /// hernoemen zou elk bestaand voorstel onleesbaar maken. Voor het scherm is er
+    /// `getoond`.
+    enum Status: String, Codable {
+        case open, goedgekeurd, geweigerd, mislukt
+
+        /// What the user reads. Kept apart from the stored value on purpose.
+        var getoond: String {
+            switch self {
+            case .open:        return "waiting"
+            case .goedgekeurd: return "filed"
+            case .geweigerd:   return "discarded"
+            case .mislukt:     return "failed"
+            }
+        }
+    }
 
     var id: String = UUID().uuidString
     var tijd: Date = Date()
