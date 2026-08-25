@@ -1,7 +1,15 @@
+<p align="center">
+  <img src="docs/icon.png" alt="" width="112">
+</p>
+
 # Presort
 
 A small macOS app that reads your inbox with a language model **you** run, and turns
-what it finds into calendar entries and reminders.
+what it finds into calendar entries, reminders and filed documents.
+
+<p align="center">
+  <img src="docs/flow.svg" alt="Mail passes a model you run yourself and is split into calendar entries and reminders" width="560">
+</p>
 
 Everything lands in your mailbox and then nothing happens to it: the confirmation with a
 date buried in the third paragraph, the invoice due on the fourth, the parcel that has to
@@ -27,22 +35,33 @@ email can therefore produce a wrong form at worst, never an action.
 Dates must fall between roughly a month back and a year ahead. An appointment longer than
 48 hours is refused. Whatever survives goes into a queue.
 
-**It writes only into its own calendar and reminder list.** Your existing calendars are
-read so it can spot a duplicate, and never written to.
+**It writes into a calendar and a reminder list of its own.** Your existing calendars are
+read so it can spot a duplicate, and left alone. There is a switch to point it at a calendar
+you already use, with the reason not to next to it.
+
+Everything the app does happens on your Mac, with one exception you have to turn on
+yourself: a **connection** to a service elsewhere. Paperless-ngx is the first, and it is
+what a found document is handed to.
 
 ## What it looks for
 
-Six built-in categories, each a switch you can turn off, each with a description you can
+Seven built-in categories, each a switch you can turn off, each with a description you can
 rewrite in your own words:
 
-| | |
-|---|---|
-| Appointments | somewhere you have to be, at a time |
-| Things to do | something you have to act on |
-| Invoices and payments | with the amount and the due date |
-| Renewals and expiries | subscriptions, insurance, documents |
-| Parcels to collect | waiting at a pick-up point |
-| Travel and tickets | flights, trains, hotels, performances |
+| | | lands in |
+|---|---|---|
+| Appointments | somewhere you have to be, at a time | calendar |
+| Things to do | something you have to act on | reminders |
+| Invoices and payments | with the amount and the due date | reminders |
+| Renewals and expiries | subscriptions, insurance, documents | reminders |
+| Parcels to collect | waiting at a pick-up point | reminders |
+| Travel and tickets | flights, trains, hotels, performances | calendar |
+| Documents worth keeping | an attached invoice, statement, policy or ticket | Paperless-ngx |
+
+A document only gets asked about when the message actually carries an attachment, and it
+goes to Paperless with what the mail already says about it: the sender as correspondent,
+the date printed on it, and a title. Tags are matched against ones that already exist in
+your archive; none are invented.
 
 You can add your own. What you **cannot** change is the JSON schema wrapped around your
 description, because the validation above depends on its shape. The app shows you those
@@ -51,6 +70,21 @@ fixed parts, greyed out, above and below the box you type in.
 Deadlines get a reminder a configurable number of days early (three by default) while
 keeping the real date as the due date. A reminder that fires on the day a parcel must be
 back is not much use.
+
+## What it looks like
+
+<p align="center">
+  <img src="docs/screenshot-waiting.png"
+       alt="Three proposals waiting: a dental appointment going to the calendar, an energy bill going to the reminder list, and an attached statement going to Paperless-ngx. Each card lists the fields that will be written."
+       width="760">
+</p>
+
+Example data. Each card shows what will be written, not the fragment of mail it came from,
+and each shape has a colour that follows it into the list of what has been handled.
+
+<p align="center">
+  <img src="docs/screenshot-welcome.png" alt="The welcome screen, explaining that mail goes to a model at an address you choose and that nothing is sent anywhere else." width="620">
+</p>
 
 ## Requirements
 
