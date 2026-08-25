@@ -12,3 +12,6 @@ build/
 *.xcworkspace/
 xcuserdata/
 DerivedData/
+
+# Article assets for the website, not part of the app
+artikel/
