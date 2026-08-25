@@ -126,6 +126,10 @@ final class Preferences: ObservableObject {
         set { leadDays = newValue.rawValue }
     }
 
+    /// Shown once, on the first launch. Kept here rather than in @AppStorage so it sits
+    /// with everything else the app remembers about you.
+    @Published var hasSeenWelcome: Bool { didSet { save("welkomGezien", hasSeenWelcome ? "1" : "0") } }
+
     @Published var rhythmMinutes: Int { didSet { save("ritme", String(rhythmMinutes)) } }
     @Published var notificationsOn: Bool { didSet { save("meldingen", notificationsOn ? "1" : "0") } }
 
@@ -151,6 +155,7 @@ final class Preferences: ObservableObject {
         onlyHighConfidence = read("zekerheid", "1") == "1"
         fileAutomatically = read("zetZelfIn", "0") == "1"
         leadDays = Int(read("voorsprong", "3")) ?? 3
+        hasSeenWelcome = read("welkomGezien", "0") == "1"
         rhythmMinutes = Int(read("ritme", "0")) ?? 0
         notificationsOn = read("meldingen", "1") == "1"
     }

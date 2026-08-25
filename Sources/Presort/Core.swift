@@ -14,6 +14,10 @@ final class Core: ObservableObject {
     @Published var statusLine = ""
     @Published var busy = false
 
+    /// Driven from two places -- the first launch and the Help menu -- so it lives here
+    /// rather than in the window that happens to show it.
+    @Published var showWelcome = false
+
     private lazy var scanner = Scanner(preferences: preferences, queue: queue,
                                        detectors: detectors)
     private var calendarStore: CalendarStore?
@@ -32,6 +36,7 @@ final class Core: ObservableObject {
     /// Once at startup: request access and wind up the ticker.
     func start() async {
         NotificationDelegate.shared.connect()
+        if !preferences.hasSeenWelcome { showWelcome = true }
 
         if calendarStore == nil {
             let a = CalendarStore(target: calendarTarget)

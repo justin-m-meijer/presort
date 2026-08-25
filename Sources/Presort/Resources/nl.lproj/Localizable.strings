@@ -228,3 +228,21 @@
 "create.ownOne" = "De eigen";
 "create.gone" = "de gekozen bestaat niet meer";
 "create.existingWarning" = "Apart houden is veiliger. In een eigen agenda staat alles wat de app heeft weggezet bij elkaar, zie je een misser meteen, en kan terugdraaien nooit iets raken dat je zelf hebt gezet. Tussen je eigen items werkt de knop Terugdraaien nog steeds, maar valt een verkeerde afspraak veel minder op.";
+
+/* The welcome screen. */
+
+"welcome.title" = "Welkom bij Presort";
+"welcome.tagline" = "Je postvak, gelezen door een model dat je zelf draait.";
+"welcome.point1" = "Hij leest je post met je eigen model";
+"welcome.point1.body" = "Post gaat van Apple Mail naar een model op een adres dat jij kiest, en komt terug. Er gaat niets ergens anders heen. Het model krijgt geen gereedschap — tekst erin, een formulier eruit.";
+"welcome.point2" = "Hij stelt voor, jij beslist";
+"welcome.point2.body" = "Afspraken en dingen om te doen komen in een wachtrij. Eén knop zet ze erin, één gooit ze weg. Later kun je de zekere gevallen vanzelf laten wegzetten.";
+"welcome.point3" = "Hij schrijft in een eigen agenda";
+"welcome.point3.body" = "Je bestaande agenda’s worden gelezen om dubbels te herkennen, en nooit gewijzigd — tenzij je dat bij Aanmaken anders instelt.";
+"welcome.setUp" = "Inrichten";
+"welcome.later" = "Later";
+"welcome.lane.mail" = "Post";
+"welcome.lane.model" = "Jouw model";
+"welcome.lane.calendar" = "Agenda";
+"welcome.lane.reminders" = "Herinneringen";
+"welcome.menuItem" = "Welkom bij Presort";

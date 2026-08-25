@@ -13,7 +13,16 @@ struct PresortApp: App {
                 .frame(minWidth: 620, minHeight: 460)
         }
         .defaultSize(width: 780, height: 620)
-        .commands { CommandGroup(replacing: .newItem) {} }
+        .commands {
+            CommandGroup(replacing: .newItem) {}
+            CommandGroup(replacing: .help) {
+                Button(t("welcome.menuItem")) {
+                    Windows.remember { }
+                    Windows.toFront()
+                    core.showWelcome = true
+                }
+            }
+        }
 
         // Without this, "checking by itself" is a promise that only holds while the
         // window is open. The menu bar item keeps the app alive and shows what came in
@@ -50,6 +59,16 @@ struct MainWindow: View {
         .task {
             Windows.remember { openWindow(id: Windows.main) }
             await core.start()
+        }
+        .sheet(isPresented: $core.showWelcome) {
+            Welcome(done: {
+                core.showWelcome = false
+                preferences.hasSeenWelcome = true
+            }, openSettings: {
+                // The one thing that has to happen before the app is of any use: an address
+                // and a model name. Sending them straight there beats saying "go to Settings".
+                NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
+            })
         }
     }
 

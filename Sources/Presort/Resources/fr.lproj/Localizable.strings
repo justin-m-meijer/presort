@@ -228,3 +228,21 @@
 "create.ownOne" = "Le sien";
 "create.gone" = "celui choisi n’existe plus";
 "create.existingWarning" = "Garder les choses séparées est plus sûr. Dans un calendrier dédié, tout ce que l’app a classé se trouve au même endroit, une erreur saute aux yeux, et une annulation ne peut jamais toucher ce que vous avez saisi vous-même. Mêlé à vos propres entrées, le bouton Annuler fonctionne toujours, mais une entrée erronée passe bien plus facilement inaperçue.";
+
+/* The welcome screen. */
+
+"welcome.title" = "Bienvenue dans Presort";
+"welcome.tagline" = "Votre boîte aux lettres, lue par un modèle que vous hébergez vous-même.";
+"welcome.point1" = "Il lit votre courrier avec votre propre modèle";
+"welcome.point1.body" = "Le courrier passe d’Apple Mail à un modèle situé à une adresse que vous choisissez, puis revient. Rien n’est envoyé ailleurs. Le modèle ne reçoit aucun outil — du texte en entrée, un formulaire en sortie.";
+"welcome.point2" = "Il propose, vous décidez";
+"welcome.point2.body" = "Rendez-vous et tâches arrivent dans une file d’attente. Un bouton les classe, un autre les écarte. Plus tard, vous pourrez laisser classer automatiquement les cas certains.";
+"welcome.point3" = "Il écrit dans un calendrier qui lui est propre";
+"welcome.point3.body" = "Vos calendriers existants sont lus pour repérer les doublons, et jamais modifiés — sauf si vous en décidez autrement dans Création.";
+"welcome.setUp" = "Configurer";
+"welcome.later" = "Plus tard";
+"welcome.lane.mail" = "Courrier";
+"welcome.lane.model" = "Votre modèle";
+"welcome.lane.calendar" = "Calendrier";
+"welcome.lane.reminders" = "Rappels";
+"welcome.menuItem" = "Bienvenue dans Presort";

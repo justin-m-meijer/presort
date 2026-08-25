@@ -231,3 +231,21 @@
 "create.ownOne" = "Its own";
 "create.gone" = "the chosen one no longer exists";
 "create.existingWarning" = "Keeping it separate is safer. In a calendar of its own everything the app filed sits together, a mistake is easy to spot, and undoing one can never touch something you put there yourself. Mixed in with your own entries the Undo button still works, but a wrong entry is a lot harder to notice.";
+
+/* The welcome screen. */
+
+"welcome.title" = "Welcome to Presort";
+"welcome.tagline" = "Your inbox, read by a model you run yourself.";
+"welcome.point1" = "It reads your mail with your own model";
+"welcome.point1.body" = "Mail goes from Apple Mail to a model at an address you choose, and comes back. Nothing is sent anywhere else. The model is handed no tools — text in, a form out.";
+"welcome.point2" = "It proposes, you decide";
+"welcome.point2.body" = "Appointments and things to do land in a queue. One button files them, one throws them away. Later you can let it file the certain ones by itself.";
+"welcome.point3" = "It writes into a calendar of its own";
+"welcome.point3.body" = "Your existing calendars are read so it can spot a duplicate, and never changed — unless you say otherwise under Creating.";
+"welcome.setUp" = "Set it up";
+"welcome.later" = "Later";
+"welcome.lane.mail" = "Mail";
+"welcome.lane.model" = "Your model";
+"welcome.lane.calendar" = "Calendar";
+"welcome.lane.reminders" = "Reminders";
+"welcome.menuItem" = "Welcome to Presort";

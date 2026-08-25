@@ -228,3 +228,21 @@
 "create.ownOne" = "Der eigene";
 "create.gone" = "der gewählte existiert nicht mehr";
 "create.existingWarning" = "Getrennt zu halten ist sicherer. In einem eigenen Kalender steht alles, was die App eingetragen hat, beieinander, ein Fehler fällt sofort auf, und ein Rückgängig kann nie etwas treffen, das du selbst eingetragen hast. Zwischen deinen eigenen Einträgen funktioniert der Rückgängig-Knopf weiterhin, aber ein falscher Eintrag fällt sehr viel schwerer auf.";
+
+/* The welcome screen. */
+
+"welcome.title" = "Willkommen bei Presort";
+"welcome.tagline" = "Dein Postfach, gelesen von einem Modell, das du selbst betreibst.";
+"welcome.point1" = "Er liest deine Post mit deinem eigenen Modell";
+"welcome.point1.body" = "Post geht von Apple Mail an ein Modell unter einer Adresse deiner Wahl und kommt zurück. Sonst geht nichts irgendwohin. Das Modell bekommt kein Werkzeug — Text hinein, ein Formular heraus.";
+"welcome.point2" = "Er schlägt vor, du entscheidest";
+"welcome.point2.body" = "Termine und Aufgaben landen in einer Warteschlange. Ein Knopf trägt sie ein, einer verwirft sie. Später kannst du die sicheren Fälle von selbst eintragen lassen.";
+"welcome.point3" = "Er schreibt in einen eigenen Kalender";
+"welcome.point3.body" = "Deine vorhandenen Kalender werden gelesen, um Dubletten zu erkennen, und nie verändert — außer du stellst es unter Anlegen anders ein.";
+"welcome.setUp" = "Einrichten";
+"welcome.later" = "Später";
+"welcome.lane.mail" = "Post";
+"welcome.lane.model" = "Dein Modell";
+"welcome.lane.calendar" = "Kalender";
+"welcome.lane.reminders" = "Erinnerungen";
+"welcome.menuItem" = "Willkommen bei Presort";
