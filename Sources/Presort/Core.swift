@@ -188,6 +188,7 @@ final class Core: ObservableObject {
             await calendarStore.setLeadDays(preferences.leadDays)
             return calendarStore
         case .document:
+            await preferences.loadPaperlessToken()
             guard preferences.paperlessReady else { return nil }
             await paperless.setConfig(preferences.paperlessConfig)
             await paperless.setSource(Mailbox(account: preferences.account,

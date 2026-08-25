@@ -32,6 +32,7 @@ struct ConnectionsTab: View {
             }
         }
         .formStyle(.grouped)
+        .task { await preferences.loadPaperlessToken() }
     }
 }
 

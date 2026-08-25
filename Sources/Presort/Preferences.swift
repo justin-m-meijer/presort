@@ -139,8 +139,32 @@ final class Preferences: ObservableObject {
     @Published var paperlessOn: Bool { didSet { save("paperlessAan", paperlessOn ? "1" : "0") } }
     @Published var paperlessAddress: String { didSet { save("paperlessAdres", paperlessAddress) } }
     /// In the Keychain, not here: this one opens somebody's whole archive.
-    @Published var paperlessToken: String {
-        didSet { Keychain.set(paperlessToken, for: "paperless-token") }
+    ///
+    /// Deliberately empty until something asks for it. Reading the Keychain blocks when the
+    /// login keychain is locked -- it waits on a system dialog -- and a read on the launch
+    /// path meant the app came up with no window and no menu bar at all. Alive, at nought
+    /// per cent, waiting for a question nobody was shown. Nothing that can block belongs in
+    /// the initialiser of something the first window is built from.
+    @Published var paperlessToken: String = "" {
+        didSet {
+            guard !loadingToken else { return }
+            Keychain.set(paperlessToken, for: "paperless-token")
+        }
+    }
+    private var loadingToken = false
+    private var tokenLoaded = false
+
+    /// Fetches it once, off the main thread, when something actually needs it.
+    func loadPaperlessToken() async {
+        guard !tokenLoaded else { return }
+        tokenLoaded = true
+        let stored = await Task.detached(priority: .utility) {
+            Keychain.get("paperless-token")
+        }.value
+        guard !stored.isEmpty else { return }
+        loadingToken = true
+        paperlessToken = stored
+        loadingToken = false
     }
     @Published var paperlessTags: String { didSet { save("paperlessTags", paperlessTags) } }
     @Published var paperlessCreatesCorrespondents: Bool {
@@ -194,7 +218,6 @@ final class Preferences: ObservableObject {
         hasSeenWelcome = read("welkomGezien", "0") == "1"
         paperlessOn = read("paperlessAan", "0") == "1"
         paperlessAddress = read("paperlessAdres", "")
-        paperlessToken = Keychain.get("paperless-token")
         paperlessTags = read("paperlessTags", "presort")
         paperlessCreatesCorrespondents = read("paperlessCorrespondent", "0") == "1"
         rhythmMinutes = Int(read("ritme", "0")) ?? 0

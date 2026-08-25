@@ -15,13 +15,7 @@ struct PresortApp: App {
         .defaultSize(width: 780, height: 620)
         .commands {
             CommandGroup(replacing: .newItem) {}
-            CommandGroup(replacing: .help) {
-                Button(t("welcome.menuItem")) {
-                    Windows.remember { }
-                    Windows.toFront()
-                    core.showWelcome = true
-                }
-            }
+            HelpCommands(core: core)
         }
 
         // Without this, "checking by itself" is a promise that only holds while the
@@ -37,6 +31,26 @@ struct PresortApp: App {
             PreferencesWindow(detectors: core.detectors)
                 .environmentObject(core.preferences)
                 .environmentObject(core.queue)
+        }
+    }
+}
+
+/// The Help menu, in a type of its own so it can reach `openWindow`.
+///
+/// Going through a stored closure was the old way and it had a hole: the closure was
+/// installed by the window, so with no window there was nothing to call, and the menu item
+/// whose whole job is to bring a window back did nothing at all.
+struct HelpCommands: Commands {
+    @ObservedObject var core: Core
+    @Environment(\.openWindow) private var openWindow
+
+    var body: some Commands {
+        CommandGroup(replacing: .help) {
+            Button(t("welcome.menuItem")) {
+                NSApp.activate(ignoringOtherApps: true)
+                openWindow(id: Windows.main)
+                core.showWelcome = true
+            }
         }
     }
 }
@@ -153,10 +167,16 @@ struct MainWindow: View {
 /// up to date -- readable out of the corner of your eye, which a number is not.
 struct MenuBarIcon: View {
     @ObservedObject var queue: Queue
+    @Environment(\.openWindow) private var openWindow
 
     var body: some View {
         let n = queue.waiting.count
         Image(systemName: n == 0 ? "tray" : "tray.full.fill")
+            // The icon is the one thing that is always there, so this is where the app
+            // learns how to open its window. It used to be learned from the window itself,
+            // which works right up until there is no window -- and then the menu item that
+            // exists to bring one back quietly does nothing.
+            .task { Windows.remember { openWindow(id: Windows.main) } }
             .accessibilityLabel(n == 0 ? t("menu.nothingWaiting")
                                        : String(format: t("window.waiting"), n))
     }
@@ -187,8 +207,8 @@ struct MenuBarMenu: View {
         Button(t("button.checkNow")) { Task { await core.check() } }
             .disabled(core.busy || !core.preferences.isConfigured)
         Button(t("menu.openWindow")) {
-            Windows.remember { openWindow(id: Windows.main) }
-            Windows.toFront()
+            NSApp.activate(ignoringOtherApps: true)
+            openWindow(id: Windows.main)
         }
         SettingsLink { Text(t("menu.settings")) }
 
