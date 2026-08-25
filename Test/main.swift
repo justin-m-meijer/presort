@@ -41,8 +41,11 @@ func run() async {
     try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
     try? Data(#"{"aanpassingen":{"afspraak":{"aan":false},"actie":{"aan":false}},"eigen":[]}"#.utf8)
         .write(to: path)
+    // Counted from the source of truth rather than written out: adding a built-in point
+    // should not be a reason for a test to fail.
+    let builtIn = Detector.builtInIds.count
     let a = Detectors(folder: folder)
-    expect(a.all.count == 6, "six detectors loaded (\(a.all.count))")
+    expect(a.all.count == builtIn, "all \(builtIn) built-in detectors loaded (\(a.all.count))")
     expect(a.active.isEmpty, "all off, because that is what the file says (\(a.active.count) on)")
 
     // --- 2. default state without a file: two on ---
@@ -67,6 +70,12 @@ func run() async {
     expect(prompt.contains("\"begin\""), "and it is the schema of an appointment")
     expect(invoice.systemText.contains("\"bedrag\""), "a reminder gets the other schema")
     expect(!invoice.systemText.contains("\"begin\""), "and not the appointment one")
+
+    // Every shape must be reachable, and each built-in point must claim one that exists.
+    expect(Set(b.all.map(\.kind)).count >= 3, "the built-in points cover more than one shape")
+    expect(b.all.contains { $0.kind == .document }, "there is a document point")
+    expect(b.all.first { $0.kind == .document }?.enabled == false,
+           "and it is off by default, like every point that needs setting up")
 
     // --- 4. editing stores only the difference ---
     b.edit("afspraak", instruction: "Only dentist appointments.")
@@ -106,14 +115,16 @@ func run() async {
     expect(back?.name == "Training schedule", "a detector of your own survives a reload")
     expect(back?.kind == .event, "including the chosen shape")
     expect(back?.systemText.contains("Sessions with a time.") == true, "and its text")
-    expect(d.all.count == 7, "it sits alongside the six built-in ones (\(d.all.count))")
+    expect(d.all.count == builtIn + 1,
+           "it sits alongside the built-in ones (\(d.all.count))")
 
     d.remove(own.id)
-    expect(Detectors(folder: folder).all.count == 6, "and is gone again afterwards")
+    expect(Detectors(folder: folder).all.count == builtIn, "and is gone again afterwards")
 
     // --- 8. a corrupt file must not take the app down ---
     try? Data("{ this is not json".utf8).write(to: path)
-    expect(Detectors(folder: folder).all.count == 6, "an unreadable file falls back to defaults")
+    expect(Detectors(folder: folder).all.count == builtIn,
+           "an unreadable file falls back to defaults")
 
     // --- 9. an older proposals file must stay readable ---
     // Every new field on Voorstel has to be optional: the synthesised decoder does not fall
@@ -188,7 +199,8 @@ func run() async {
                + (missing.isEmpty ? "" : " -- missing \(missing)"))
         // The JSON keys must be identical everywhere: Scanner reads them by name.
         let schemaKeys = ["gevonden", "titel", "begin", "eind", "locatie",
-                          "wat", "uiterlijk", "bedrag", "zekerheid"]
+                          "wat", "uiterlijk", "bedrag", "zekerheid",
+                          "datum", "afzender", "trefwoorden"]
         let stray = schemaKeys.filter { !text.contains("\\\"\($0)\\\"") }
         expect(stray.isEmpty, "\(language): schema keeps its keys"
                + (stray.isEmpty ? "" : " -- missing \(stray)"))

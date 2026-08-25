@@ -269,3 +269,28 @@
 "paperless.error.notConfigured" = "No token filled in yet.";
 "paperless.error.http" = "Paperless answered with code %1$d. %2$@";
 "paperless.error.rejected" = "Paperless did not accept it: %@";
+
+/* Documents: the third shape. */
+
+"shape.document" = "Document in the archive";
+"schema.document" = "{\"gevonden\": true|false, \"titel\": \"what the document is, in English\",\n \"datum\": \"YYYY-MM-DD or empty\", \"afzender\": \"the organisation it is from\",\n \"trefwoorden\": [\"one\", \"two\"], \"zekerheid\": \"hoog|midden|laag\"}";
+"detector.bewaren.name" = "Documents worth keeping";
+"detector.bewaren.summary" = "An attached invoice, statement, policy or ticket";
+"detector.bewaren.instruction" = "The message carries a FILE worth keeping: an invoice, a bank or card statement, an insurance policy, a contract, a payslip, a certificate, a warranty, a ticket or a booking confirmation.\n\nJudge the attachment, not the message. A newsletter with a logo attached is not a document. A signature image, a tracking pixel or an unsubscribe icon is not a document.\n\nPut in \"titel\" what the document IS, short and plain: the kind plus what it concerns, such as \"Energy bill July\". Describe the document that is actually attached — never copy an example from these instructions. Not the subject line of the mail.\n\nPut in \"datum\" the date ON the document if the text names one, otherwise leave it empty. Do not work it out yourself.\n\nPut in \"afzender\" the name of the organisation, without the email address: \"British Gas\", not \"British Gas <billing@britishgas.co.uk>\".\n\nPut in \"trefwoorden\" a handful of plain single words for what it concerns: energy, invoice, insurance, travel. They are matched against labels that already exist, so keep them ordinary.";
+"badge.document" = "Document";
+"paperless.error.noFile" = "The attachment could not be fetched.";
+"paperless.error.tooBig" = "%1$d MB is over the %2$d MB limit.";
+
+/* The card for a document. */
+
+"card.intoPaperless" = "GOES INTO PAPERLESS-NGX";
+"card.file" = "File";
+"card.documentDate" = "Dated";
+"card.dateOfMail" = "not on the document — the date of the mail is used";
+"card.from" = "From";
+"card.tags" = "Tags";
+"card.paperlessNote" = "Only tags that already exist in your archive are applied; the rest are dropped. Paperless reads the file afterwards, which can take a while.";
+
+/* The attachment names in the frame. */
+
+"frame.attachments" = "Attachments:";

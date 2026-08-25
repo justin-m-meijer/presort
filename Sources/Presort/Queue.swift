@@ -9,6 +9,7 @@ struct Proposal: Identifiable, Codable, Hashable {
     enum Category: String, Codable {
         case event = "afspraak"
         case reminder = "herinnering"
+        case document = "document"
         case skipped = "overgeslagen"
     }
     /// Spelled out for the same reason. For the screen there is `getoond`.
@@ -58,6 +59,19 @@ struct Proposal: Identifiable, Codable, Hashable {
     /// same reason. Only "hoog" may be filed automatically.
     var confidence: String?
 
+    /// The message this came out of, so its attachment can still be fetched after the fact
+    /// -- a document is only downloaded once you approve it, not while scanning.
+    var messageId: String?
+    /// Which attachment of that message, and what the sender called it.
+    var attachmentIndex: Int?
+    var attachmentName: String?
+    /// Words the model pulled out of the mail. Matched against tags that already exist when
+    /// filing; never used to invent one.
+    var keywords: [String]?
+    /// The organisation the document is from, as the model read it off the mail -- "British
+    /// Gas" rather than "British Gas <billing@britishgas.co.uk>". An archive wants the name.
+    var correspondent: String?
+
     /// Which destination filed this. Optional, like the two above: proposals from before
     /// there was more than one destination have no answer, and everything back then went
     /// to the calendar.
@@ -84,6 +98,11 @@ struct Proposal: Identifiable, Codable, Hashable {
         case error = "fout"
         case detector = "herkenner"
         case confidence = "zekerheid"
+        case messageId = "berichtId"
+        case attachmentIndex = "bijlageNr"
+        case attachmentName = "bijlageNaam"
+        case keywords = "trefwoorden"
+        case correspondent = "correspondent"
         case destination = "bestemming"
     }
 }

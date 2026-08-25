@@ -245,9 +245,8 @@ struct ProposalCard: View {
                 Text(badge)
                     .font(.system(size: 9, weight: .semibold)).kerning(0.6)
                     .padding(.horizontal, 6).padding(.vertical, 2)
-                    .background(proposal.category == .event
-                                ? Color.accentColor.opacity(0.15) : Color.orange.opacity(0.16))
-                    .foregroundStyle(proposal.category == .event ? Color.accentColor : Color.orange)
+                    .background(tint.opacity(0.15))
+                    .foregroundStyle(tint)
                     .clipShape(RoundedRectangle(cornerRadius: 3))
                 Text(proposal.title).font(.system(size: 13, weight: .semibold)).lineLimit(2)
             }
@@ -269,9 +268,23 @@ struct ProposalCard: View {
     }
 
     private var badge: String {
-        let name = proposal.detector
-            ?? (proposal.category == .event ? t("badge.event") : t("badge.reminder"))
+        let name = proposal.detector ?? {
+            switch proposal.category {
+            case .event: return t("badge.event")
+            case .document: return t("badge.document")
+            default: return t("badge.reminder")
+            }
+        }()
         return name.uppercased()
+    }
+
+    /// A colour per shape, so which kind of thing this is registers before you read it.
+    private var tint: Color {
+        switch proposal.category {
+        case .event: return .accentColor
+        case .document: return .purple
+        default: return .orange
+        }
     }
 }
 
@@ -289,7 +302,13 @@ struct WhatLands: View {
                 .foregroundStyle(.secondary)
 
             Grid(alignment: .topLeading, horizontalSpacing: 10, verticalSpacing: 3) {
-                if proposal.category == .event {
+                if proposal.category == .document {
+                    row(t("card.file"), proposal.attachmentName ?? "")
+                    row(t("card.documentDate"), proposal.dueDate.map(Dates.longDay)
+                                                ?? t("card.dateOfMail"))
+                    row(t("card.from"), proposal.correspondent ?? proposal.sender)
+                    row(t("card.tags"), (proposal.keywords ?? []).joined(separator: ", "))
+                } else if proposal.category == .event {
                     row(t("card.when"), Dates.spanText(proposal.start, proposal.end))
                     if !proposal.location.isEmpty { row(t("card.where"), proposal.location) }
                 } else {
@@ -297,7 +316,13 @@ struct WhatLands: View {
                     row(t("card.alert"), alert)
                     if !proposal.amount.isEmpty { row(t("card.amount"), proposal.amount) }
                 }
-                row(t("card.note"), proposal.note)
+                if proposal.category != .document { row(t("card.note"), proposal.note) }
+            }
+            if proposal.category == .document {
+                Text(t("card.paperlessNote"))
+                    .font(.system(size: 10))
+                    .foregroundStyle(.tertiary)
+                    .fixedSize(horizontal: false, vertical: true)
             }
         }
         .padding(9)
@@ -307,9 +332,14 @@ struct WhatLands: View {
     }
 
     private var heading: String {
-        let name = preferences.calendarName
-        return String(format: t(proposal.category == .event
-                               ? "card.intoCalendar" : "card.intoList"), name)
+        switch proposal.category {
+        case .document:
+            return t("card.intoPaperless")
+        case .event:
+            return String(format: t("card.intoCalendar"), preferences.calendarName)
+        default:
+            return String(format: t("card.intoList"), preferences.calendarName)
+        }
     }
 
     /// The same calculation `CalendarStore` will do later, so that nothing shown here fails to

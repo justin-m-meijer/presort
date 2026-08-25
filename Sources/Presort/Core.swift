@@ -21,6 +21,9 @@ final class Core: ObservableObject {
     private lazy var scanner = Scanner(preferences: preferences, queue: queue,
                                        detectors: detectors)
     private var calendarStore: CalendarStore?
+    /// Built once and kept, so its settings can be refreshed rather than a new client made
+    /// for every document.
+    private lazy var paperless = Paperless(config: preferences.paperlessConfig)
     private var subscriptions = Set<AnyCancellable>()
 
     init() {
@@ -184,6 +187,12 @@ final class Core: ObservableObject {
             await calendarStore.setTarget(calendarTarget)
             await calendarStore.setLeadDays(preferences.leadDays)
             return calendarStore
+        case .document:
+            guard preferences.paperlessReady else { return nil }
+            await paperless.setConfig(preferences.paperlessConfig)
+            await paperless.setSource(Mailbox(account: preferences.account,
+                                              mailbox: preferences.mailbox))
+            return paperless
         case .skipped:
             return nil
         }
@@ -194,6 +203,7 @@ final class Core: ObservableObject {
     private func destination(named id: String?) -> (any Destination)? {
         switch id {
         case nil, "calendar": return calendarStore
+        case "paperless": return preferences.paperlessReady ? paperless : nil
         default: return nil
         }
     }

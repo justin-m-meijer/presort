@@ -100,13 +100,24 @@ final class Scanner: ObservableObject {
                 continue
             }
 
+            // Fetched before the frame is built, because the names belong in it: a point
+            // that says "judge the attachment" is useless to a model that cannot see one.
+            // Only when something actually asks -- it is another round trip to Mail.
+            var attachments: [String] = []
+            if b.attachmentCount > 0, points.contains(where: { $0.kind.needsAttachment }) {
+                attachments = (try? mailbox.attachmentNames(from: b.id)) ?? []
+            }
+            let attachmentLine = attachments.isEmpty
+                ? ""
+                : "\n\(t("frame.attachments")) \(attachments.joined(separator: ", "))"
+
             // The frame around the message. It is part of the prompt, so it follows the
             // app language: an English frame around Dutch keys is what made the model
             // answer in the wrong language before.
             let frame = """
             \(String(format: t("frame.today"), Dates.today()))
             \(t("frame.sender")) \(b.sender)
-            \(t("frame.subject")) \(b.subject)
+            \(t("frame.subject")) \(b.subject)\(attachmentLine)
 
             \(t("frame.untrusted"))
             \(text)
@@ -123,13 +134,18 @@ final class Scanner: ObservableObject {
             var understood = false
             do {
                 for point in points {
+                    if point.kind.needsAttachment {
+                        guard keepable(attachments) != nil else { continue }
+                    }
                     let answer = try await client.ask(system: point.systemText,
                                                           user: frame)
                     guard let o = ModelClient.jsonFrom(answer) else { continue }
                     understood = true
-                    proposal = point.kind == .event
-                        ? makeEventProposal(o, b, point)
-                        : makeTaskProposal(o, b, point)
+                    switch point.kind {
+                    case .event:    proposal = makeEventProposal(o, b, point)
+                    case .reminder: proposal = makeTaskProposal(o, b, point)
+                    case .document: proposal = makeDocumentProposal(o, b, point, attachments)
+                    }
                     if proposal != nil { break }
                 }
             } catch {
@@ -207,6 +223,46 @@ final class Scanner: ObservableObject {
                         title: what, dueDate: dueDate, amount: amount,
                         note: note(b) + (amount.isEmpty ? "" : String(format: t("note.amount"), amount)),
                         detector: point.name, confidence: confidence(o))
+    }
+
+    /// The first attachment worth archiving, with its position -- the position is what the
+    /// download indexes by, so the two travel together or not at all.
+    private func keepable(_ names: [String]) -> (index: Int, name: String)? {
+        for (i, name) in names.enumerated() {
+            let ext = (name as NSString).pathExtension.lowercased()
+            if Mailbox.keepable.contains(ext) { return (i, name) }
+        }
+        return nil
+    }
+
+    private func makeDocumentProposal(_ o: [String: Any], _ b: Mailbox.Message,
+                                      _ point: Detector, _ names: [String]) -> Proposal? {
+        guard (o["gevonden"] as? Bool) == true, confidentEnough(o) else { return nil }
+        guard let file = keepable(names) else { return nil }
+        let title = (o["titel"] as? String ?? "").trimmingCharacters(in: .whitespaces)
+        guard title.count >= 2, title.count <= 120 else { return nil }
+
+        // The date on the document if the model found one, otherwise the date of the mail.
+        // Never invented: an archive sorted by a made-up date is worse than one sorted by
+        // the day it arrived.
+        let onDocument = Dates.read(o["datum"] as? String)
+        let dated = onDocument.flatMap { Dates.plausible($0) ? $0 : nil }
+
+        // Trimmed hard: these are matched against tags that already exist, and a sentence
+        // never matches a tag.
+        let keywords = (o["trefwoorden"] as? [Any] ?? [])
+            .compactMap { $0 as? String }
+            .map { $0.trimmingCharacters(in: .whitespaces) }
+            .filter { $0.count >= 2 && $0.count <= 40 }
+            .prefix(8)
+
+        let from = (o["afzender"] as? String ?? "").trimmingCharacters(in: .whitespaces)
+        return Proposal(category: .document, sender: b.sender, subject: b.subject,
+                        title: title, dueDate: dated, note: note(b),
+                        detector: point.name, confidence: confidence(o),
+                        messageId: b.id, attachmentIndex: file.index,
+                        attachmentName: file.name, keywords: Array(keywords),
+                        correspondent: from.isEmpty ? nil : String(from.prefix(80)))
     }
 
     private func note(_ b: Mailbox.Message) -> String {

@@ -25,3 +25,14 @@ enum Filing {
     /// "filed" would be a lie about somebody's calendar.
     case alreadyThere
 }
+
+
+/// Where the bytes of an attachment come from.
+///
+/// A destination needs a file; the mailbox has one. Naming the seam keeps Paperless from
+/// having to know what Mail is, and keeps the download where it belongs -- after you have
+/// approved something, not while the app is still scanning.
+protocol AttachmentSource: Sendable {
+    func attachmentNames(from messageId: String) throws -> [String]
+    func save(attachment index: Int, from messageId: String, to file: URL) throws
+}

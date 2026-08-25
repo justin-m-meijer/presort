@@ -10,6 +10,9 @@ struct Mailbox {
         let sender: String
         let subject: String
         let wasRead: Bool
+        /// How many files hang off it. Read here so a detector that only makes sense for
+        /// mail with an attachment can be skipped without asking the model anything.
+        var attachmentCount: Int = 0
     }
 
     enum Problem: LocalizedError {
@@ -96,8 +99,13 @@ struct Mailbox {
                 on error
                     set afz to ""
                 end try
+                try
+                    set bijl to (count of mail attachments of m)
+                on error
+                    set bijl to 0
+                end try
                 set end of uit to ((id of m) as string) & US & my isoDatum(date received of m) & \
-                    US & afz & US & ond & US & ((read status of m) as string)
+                    US & afz & US & ond & US & ((read status of m) as string) & US & (bijl as string)
             end repeat
         end tell
         set AppleScript's text item delimiters to linefeed
@@ -109,7 +117,8 @@ struct Mailbox {
             let d = line.components(separatedBy: Mailbox.US)
             guard d.count >= 5 else { return nil }
             return Message(id: d[0], date: d[1], sender: d[2], subject: d[3],
-                           wasRead: d[4].lowercased() == "true")
+                           wasRead: d[4].lowercased() == "true",
+                           attachmentCount: d.count > 5 ? Int(d[5]) ?? 0 : 0)
         }
     }
 
@@ -131,6 +140,68 @@ struct Mailbox {
         end tell
         """
         return Cleanup.clean(try Mailbox.osascript(script))
+    }
+
+    // MARK: attachments
+
+    /// What kinds are worth handing on. Kept short on purpose: everything here is something
+    /// a document archive can actually read, and an archive full of .ics and .vcf noise is
+    /// worse than one that missed a file.
+    static let keepable: Set<String> = ["pdf", "png", "jpg", "jpeg", "tif", "tiff", "webp", "txt"]
+
+    /// The names of the files on a message, in the order Mail lists them -- the order is
+    /// what `save(attachment:)` indexes by, so it has to come from the same place.
+    func attachmentNames(from id: String) throws -> [String] {
+        let script = """
+        set US to (ASCII character 31)
+        tell application "Mail"
+            set acc to first account whose name is \(Mailbox.asString(account))
+            set mb to mailbox \(Mailbox.asString(mailbox)) of acc
+            set treffers to (messages of mb whose id is \(id))
+            if (count of treffers) is 0 then return ""
+            set uit to {}
+            repeat with a in mail attachments of item 1 of treffers
+                try
+                    set end of uit to (name of a) as string
+                on error
+                    set end of uit to ""
+                end try
+            end repeat
+        end tell
+        set AppleScript's text item delimiters to US
+        set r to uit as string
+        set AppleScript's text item delimiters to ""
+        return r
+        """
+        let out = try Mailbox.osascript(script).trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !out.isEmpty else { return [] }
+        return out.components(separatedBy: Mailbox.US)
+    }
+
+    /// Saves one attachment, by position, to a path this app decides in full.
+    ///
+    /// The name is never taken from the message. A sender picks their own filename, and a
+    /// filename is a path if you let it be one -- handing "../../something" to AppleScript
+    /// would write wherever it pointed. So: our folder, our name, their bytes.
+    func save(attachment index: Int, from id: String, to file: URL) throws {
+        let script = """
+        tell application "Mail"
+            set acc to first account whose name is \(Mailbox.asString(account))
+            set mb to mailbox \(Mailbox.asString(mailbox)) of acc
+            set treffers to (messages of mb whose id is \(id))
+            if (count of treffers) is 0 then return "geen bericht"
+            set bijlagen to mail attachments of item 1 of treffers
+            if (count of bijlagen) < \(index + 1) then return "geen bijlage"
+            try
+                save (item \(index + 1) of bijlagen) in POSIX file \(Mailbox.asString(file.path))
+            on error e
+                return e
+            end try
+        end tell
+        return ""
+        """
+        let answer = try Mailbox.osascript(script).trimmingCharacters(in: .whitespacesAndNewlines)
+        if !answer.isEmpty { throw Problem.scriptFailed(answer) }
     }
 }
 
@@ -159,3 +230,6 @@ enum Cleanup {
         return text
     }
 }
+
+
+extension Mailbox: AttachmentSource {}

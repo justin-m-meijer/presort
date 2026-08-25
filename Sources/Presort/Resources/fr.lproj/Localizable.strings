@@ -266,3 +266,28 @@
 "paperless.error.notConfigured" = "Aucun jeton renseigné.";
 "paperless.error.http" = "Paperless a répondu avec le code %1$d. %2$@";
 "paperless.error.rejected" = "Paperless ne l’a pas accepté : %@";
+
+/* Documents: the third shape. */
+
+"shape.document" = "Document dans l’archive";
+"schema.document" = "{\"gevonden\": true|false, \"titel\": \"ce qu’est le document, en français\",\n \"datum\": \"AAAA-MM-JJ ou vide\", \"afzender\": \"l’organisation dont il provient\",\n \"trefwoorden\": [\"un\", \"deux\"], \"zekerheid\": \"hoog|midden|laag\"}";
+"detector.bewaren.name" = "Documents à conserver";
+"detector.bewaren.summary" = "Une facture, un relevé, une police ou un billet en pièce jointe";
+"detector.bewaren.instruction" = "Le message porte un FICHIER qui mérite d’être conservé : une facture, un relevé bancaire ou de carte, une police d’assurance, un contrat, une fiche de paie, un certificat, une garantie, un billet ou une confirmation de réservation.\n\nJugez la pièce jointe, pas le message. Une newsletter avec un logo attaché n’est pas un document. Une image de signature, un pixel de suivi ou une icône de désabonnement n’est pas un document.\n\nMettez dans \"titel\" CE QU’EST le document, court et simple : le type et ce qu’il concerne, par exemple « Facture d’énergie juillet ». Décrivez le document réellement joint — ne reprenez jamais un exemple de ces instructions. Pas l’objet du courriel.\n\nMettez dans \"datum\" la date FIGURANT sur le document si le texte en nomme une, sinon laissez vide. Ne la calculez pas vous-même.\n\nMettez dans \"afzender\" le nom de l’organisation, sans l’adresse électronique : « British Gas », pas « British Gas <billing@britishgas.co.uk> ».\n\nMettez dans \"trefwoorden\" quelques mots simples et isolés sur le sujet : énergie, facture, assurance, voyage. Ils sont comparés à des étiquettes existantes, restez donc ordinaire.";
+"badge.document" = "Document";
+"paperless.error.noFile" = "La pièce jointe n’a pas pu être récupérée.";
+"paperless.error.tooBig" = "%1$d Mo dépasse la limite de %2$d Mo.";
+
+/* The card for a document. */
+
+"card.intoPaperless" = "IRA DANS PAPERLESS-NGX";
+"card.file" = "Fichier";
+"card.documentDate" = "Daté du";
+"card.dateOfMail" = "absente du document — la date du courriel est utilisée";
+"card.from" = "De";
+"card.tags" = "Étiquettes";
+"card.paperlessNote" = "Seules les étiquettes déjà présentes dans votre archive sont appliquées ; les autres sont ignorées. Paperless lit ensuite le fichier, ce qui peut prendre un moment.";
+
+/* The attachment names in the frame. */
+
+"frame.attachments" = "Pièces jointes :";

@@ -24,16 +24,36 @@ func t(_ key: String) -> String {
 /// to rewrite it writes the check away. Which is why `systeemtekst` puts the preamble and the
 /// schema around it itself.
 struct Detector: Identifiable, Codable, Hashable {
-    /// The two shapes the app can check and create. There are no more: an appointment has a
-    /// start and an end, a reminder has a final date. Anything the user invents falls into
-    /// one of the two.
+    /// The shapes the app can check for and create. Each one answers a different question:
+    /// an appointment has a start and an end, a reminder has a final date, a document is a
+    /// file worth keeping. Anything the user invents falls into one of the three.
     enum Kind: String, Codable, CaseIterable, Identifiable {
         // Spelled out: these end up in herkenners.json for the user's own points.
         case event = "afspraak"
         case reminder = "herinnering"
+        case document = "document"
+
         var id: String { rawValue }
-        var name: String { t(self == .event ? "shape.event" : "shape.reminder") }
-        var category: Proposal.Category { self == .event ? .event : .reminder }
+
+        var name: String {
+            switch self {
+            case .event: return t("shape.event")
+            case .reminder: return t("shape.reminder")
+            case .document: return t("shape.document")
+            }
+        }
+
+        var category: Proposal.Category {
+            switch self {
+            case .event: return .event
+            case .reminder: return .reminder
+            case .document: return .document
+            }
+        }
+
+        /// A document is a file, and a message without one has nothing to offer. Asking the
+        /// model about it anyway costs a question per message and can only answer no.
+        var needsAttachment: Bool { self == .document }
     }
 
     var id: String
@@ -65,7 +85,13 @@ extension Detector {
     /// From the app, not editable: `Scanner` depends on this. The JSON keys stay the same in
     /// every language -- only the prose around them is translated, and the prose is what
     /// decides which language the model answers in.
-    var schema: String { t(kind == .event ? "schema.event" : "schema.reminder") }
+    var schema: String {
+        switch kind {
+        case .event:    return t("schema.event")
+        case .reminder: return t("schema.reminder")
+        case .document: return t("schema.document")
+        }
+    }
 
     static var closing: String { t("prompt.closing") }
 
@@ -94,7 +120,14 @@ extension Detector {
     ///
     /// The ids are stable and never translated -- they are the keys under which the user's
     /// own changes are stored. Only what you read comes from the string catalogue.
-    static let builtInIds = ["afspraak", "actie", "rekening", "verloopt", "ophalen", "reis"]
+    static let builtInIds = ["afspraak", "actie", "rekening", "verloopt", "ophalen", "reis",
+                             "bewaren"]
+
+    /// Which shape each built-in point produces. A table rather than a chain of conditions,
+    /// because the next one added should be one line and not a puzzle.
+    private static let builtInKinds: [String: Kind] = [
+        "afspraak": .event, "reis": .event, "bewaren": .document,
+    ]
 
     static var builtIn: [Detector] {
         builtInIds.map { id in
@@ -102,7 +135,7 @@ extension Detector {
                 id: id,
                 name: t("detector.\(id).name"),
                 summary: t("detector.\(id).summary"),
-                kind: (id == "afspraak" || id == "reis") ? .event : .reminder,
+                kind: builtInKinds[id] ?? .reminder,
                 enabled: id == "afspraak" || id == "actie",
                 instruction: t("detector.\(id).instruction"))
         }

@@ -266,3 +266,28 @@
 "paperless.error.notConfigured" = "Noch kein Token eingetragen.";
 "paperless.error.http" = "Paperless hat mit Code %1$d geantwortet. %2$@";
 "paperless.error.rejected" = "Paperless hat es nicht angenommen: %@";
+
+/* Documents: the third shape. */
+
+"shape.document" = "Dokument im Archiv";
+"schema.document" = "{\"gevonden\": true|false, \"titel\": \"was das Dokument ist, auf Deutsch\",\n \"datum\": \"JJJJ-MM-TT oder leer\", \"afzender\": \"die Organisation, von der es stammt\",\n \"trefwoorden\": [\"eins\", \"zwei\"], \"zekerheid\": \"hoog|midden|laag\"}";
+"detector.bewaren.name" = "Dokumente zum Aufbewahren";
+"detector.bewaren.summary" = "Eine angehängte Rechnung, ein Auszug, eine Police oder ein Ticket";
+"detector.bewaren.instruction" = "Der Nachricht liegt eine DATEI bei, die es wert ist, aufbewahrt zu werden: eine Rechnung, ein Konto- oder Kreditkartenauszug, eine Versicherungspolice, ein Vertrag, eine Lohnabrechnung, ein Zertifikat, ein Garantieschein, ein Ticket oder eine Buchungsbestätigung.\n\nBeurteile den Anhang, nicht die Nachricht. Ein Newsletter mit angehängtem Logo ist kein Dokument. Ein Signaturbild, ein Zählpixel oder ein Abmelde-Icon ist kein Dokument.\n\nTrage in \"titel\" ein, WAS das Dokument ist, kurz und schlicht: die Art und worum es geht, etwa „Energierechnung Juli“. Beschreibe das Dokument, das tatsächlich anhängt — übernimm nie ein Beispiel aus dieser Anleitung. Nicht die Betreffzeile der E-Mail.\n\nTrage in \"datum\" das Datum AUF dem Dokument ein, wenn der Text eines nennt, sonst leer. Rechne es nicht selbst aus.\n\nTrage in \"afzender\" den Namen der Organisation ein, ohne E-Mail-Adresse: „British Gas“, nicht „British Gas <billing@britishgas.co.uk>“.\n\nTrage in \"trefwoorden\" eine Handvoll gewöhnlicher Einzelwörter zum Thema ein: Energie, Rechnung, Versicherung, Reise. Sie werden mit bereits vorhandenen Schlagwörtern abgeglichen, bleibe also alltäglich.";
+"badge.document" = "Dokument";
+"paperless.error.noFile" = "Der Anhang konnte nicht geholt werden.";
+"paperless.error.tooBig" = "%1$d MB überschreitet die Grenze von %2$d MB.";
+
+/* The card for a document. */
+
+"card.intoPaperless" = "GEHT AN PAPERLESS-NGX";
+"card.file" = "Datei";
+"card.documentDate" = "Datiert";
+"card.dateOfMail" = "steht nicht auf dem Dokument — das Datum der E-Mail wird verwendet";
+"card.from" = "Von";
+"card.tags" = "Schlagwörter";
+"card.paperlessNote" = "Es werden nur Schlagwörter gesetzt, die es in deinem Archiv schon gibt; der Rest entfällt. Paperless liest die Datei danach noch, und das kann dauern.";
+
+/* The attachment names in the frame. */
+
+"frame.attachments" = "Anhänge:";

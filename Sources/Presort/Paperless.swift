@@ -22,9 +22,22 @@ actor Paperless {
         var createCorrespondent = false
     }
 
+    /// Anything bigger is almost certainly not a document worth archiving, and is
+    /// certainly not worth pushing across the network without being asked.
+    static let maxBytes = 25_000_000
+
     private var config: Config
-    init(config: Config) { self.config = config }
+    private var attachments: AttachmentSource?
+
+    init(config: Config, attachments: AttachmentSource? = nil) {
+        self.config = config
+        self.attachments = attachments
+    }
+
     func setConfig(_ c: Config) { config = c }
+    /// Refreshed alongside the config: the mailbox to fetch from is a setting like any
+    /// other, and one kept from first use would quietly read the wrong account.
+    func setSource(_ s: AttachmentSource) { attachments = s }
 
     enum Problem: LocalizedError {
         case notConfigured
@@ -208,4 +221,81 @@ actor Paperless {
 
 private extension Data {
     mutating func append(_ s: String) { append(Data(s.utf8)) }
+}
+
+extension Paperless: Destination {
+    nonisolated var id: String { "paperless" }
+
+    /// Fetches the attachment, hands it over, and waits to hear what became of it.
+    ///
+    /// Waiting is the point. Paperless consumes in the background and only then notices
+    /// that a document is a duplicate, so returning the moment the upload is accepted would
+    /// mean telling you something was filed that was in fact thrown away. It waits as long
+    /// as is reasonable and says plainly when it stopped waiting.
+    func file(_ proposal: Proposal) async throws -> Filing {
+        guard let messageId = proposal.messageId,
+              let index = proposal.attachmentIndex,
+              let source = attachments
+        else { throw Problem.rejected(t("paperless.error.noFile")) }
+
+        let folder = URL(fileURLWithPath: NSTemporaryDirectory())
+            .appendingPathComponent("presort-" + UUID().uuidString, isDirectory: true)
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: folder) }
+
+        // Our folder, our filename, their bytes.
+        let name = safe(proposal.attachmentName ?? "document.pdf")
+        let file = folder.appendingPathComponent(name)
+        try source.save(attachment: index, from: messageId, to: file)
+
+        let data = try Data(contentsOf: file)
+        guard !data.isEmpty else { throw Problem.rejected(t("paperless.error.noFile")) }
+        guard data.count <= Paperless.maxBytes else {
+            throw Problem.rejected(String(format: t("paperless.error.tooBig"),
+                                          data.count / 1_000_000, Paperless.maxBytes / 1_000_000))
+        }
+
+        let task = try await upload(data, filename: name, meta: Meta(
+            title: proposal.title,
+            created: proposal.dueDate ?? proposal.start ?? proposal.time,
+            correspondent: proposal.correspondent ?? proposal.sender,
+            tagNames: proposal.keywords ?? []))
+
+        // Roughly half a minute. Long enough for the checksum check that catches a
+        // duplicate, short enough that nobody is left staring at a window; OCR of a long
+        // document can outlast it, and that is what the third case is for.
+        for _ in 0..<25 {
+            switch try await outcome(ofTask: task) {
+            case .done(let documentId):
+                return .filed(documentId.map { "doc:\($0)" } ?? "task:\(task)")
+            case .failed(let why):
+                if why.localizedCaseInsensitiveContains("duplicate")
+                    || why.localizedCaseInsensitiveContains("already exists") {
+                    return .alreadyThere
+                }
+                throw Problem.rejected(why)
+            case .working:
+                try? await Task.sleep(nanoseconds: 1_200_000_000)
+            }
+        }
+        return .filed("task:\(task)")
+    }
+
+    /// Undoing puts the document in Paperless's own trash rather than erasing it: this app
+    /// should not be the thing that permanently removes a document from somebody's archive.
+    func undo(_ proposal: Proposal) async throws {
+        let documentId: Int?
+        if proposal.itemId.hasPrefix("doc:") {
+            documentId = Int(proposal.itemId.dropFirst(4))
+        } else if proposal.itemId.hasPrefix("task:") {
+            // Filed before the task finished; the task record knows which document it became.
+            guard case .done(let d) = try await outcome(ofTask: String(proposal.itemId.dropFirst(5)))
+            else { return }
+            documentId = d
+        } else {
+            documentId = nil
+        }
+        guard let documentId else { return }
+        _ = try await send(try request(try url("/api/documents/\(documentId)/"), method: "DELETE"))
+    }
 }

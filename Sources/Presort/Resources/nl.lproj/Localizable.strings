@@ -266,3 +266,28 @@
 "paperless.error.notConfigured" = "Nog geen token ingevuld.";
 "paperless.error.http" = "Paperless antwoordde met code %1$d. %2$@";
 "paperless.error.rejected" = "Paperless nam het niet aan: %@";
+
+/* Documents: the third shape. */
+
+"shape.document" = "Document in het archief";
+"schema.document" = "{\"gevonden\": true|false, \"titel\": \"wat het document is, in het Nederlands\",\n \"datum\": \"JJJJ-MM-DD of leeg\", \"afzender\": \"de organisatie waar het vandaan komt\",\n \"trefwoorden\": [\"een\", \"twee\"], \"zekerheid\": \"hoog|midden|laag\"}";
+"detector.bewaren.name" = "Documenten om te bewaren";
+"detector.bewaren.summary" = "Een bijgevoegde factuur, afschrift, polis of ticket";
+"detector.bewaren.instruction" = "Bij het bericht zit een BESTAND dat het bewaren waard is: een factuur, een bank- of creditcardafschrift, een verzekeringspolis, een contract, een loonstrook, een certificaat, een garantiebewijs, een ticket of een boekingsbevestiging.\n\nBeoordeel de bijlage, niet het bericht. Een nieuwsbrief met een logo eraan is geen document. Een handtekeningplaatje, een telpixel of een afmeldicoon is geen document.\n\nZet in \"titel\" WAT het document is, kort en gewoon: de soort plus waar het over gaat, zoals \"Energierekening juli\". Beschrijf het document dat er werkelijk bij zit — neem nooit een voorbeeld uit deze uitleg over. Niet de onderwerpregel van de mail.\n\nZet in \"datum\" de datum ÓP het document als de tekst er een noemt, anders leeg. Niet zelf uitrekenen.\n\nZet in \"afzender\" de naam van de organisatie, zonder het e-mailadres: \"British Gas\", niet \"British Gas <billing@britishgas.co.uk>\".\n\nZet in \"trefwoorden\" een handvol gewone losse woorden voor waar het over gaat: energie, factuur, verzekering, reizen. Ze worden vergeleken met labels die al bestaan, dus houd ze alledaags.";
+"badge.document" = "Document";
+"paperless.error.noFile" = "De bijlage kon niet opgehaald worden.";
+"paperless.error.tooBig" = "%1$d MB is meer dan de grens van %2$d MB.";
+
+/* The card for a document. */
+
+"card.intoPaperless" = "GAAT NAAR PAPERLESS-NGX";
+"card.file" = "Bestand";
+"card.documentDate" = "Datum";
+"card.dateOfMail" = "staat niet op het document — de datum van de mail wordt gebruikt";
+"card.from" = "Van";
+"card.tags" = "Tags";
+"card.paperlessNote" = "Alleen tags die al in je archief bestaan worden toegepast; de rest vervalt. Paperless leest het bestand daarna nog, en dat kan even duren.";
+
+/* The attachment names in the frame. */
+
+"frame.attachments" = "Bijlagen:";
