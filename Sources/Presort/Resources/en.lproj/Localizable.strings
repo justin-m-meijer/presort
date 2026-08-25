@@ -213,3 +213,21 @@
 "create.warnMe" = "Warn me";
 "create.warnNote" = "With a deadline you get nudged that many days beforehand. The reminder keeps the real date — you are simply prodded earlier, because on the final day sending something back is usually no longer possible.";
 "create.scopeNote" = "What the app creates goes into a calendar and a reminder list of its own. Your existing calendars are read but never changed.";
+
+/* Finding out what the endpoint serves. */
+
+"model.detect" = "Find models";
+"model.detected" = "Detected";
+"model.pickPrompt" = "Pick one…";
+"model.foundCount" = "%d found. Not everything listed is a chat model.";
+"model.listsNothing" = "This endpoint does not list its models. Type the name yourself.";
+"model.detectFailed" = "Could not ask the endpoint: %@";
+
+/* Choosing where entries land. */
+
+"create.useExisting" = "Write into calendars I already use";
+"create.eventCalendar" = "Appointments go to";
+"create.reminderList" = "Reminders go to";
+"create.ownOne" = "Its own";
+"create.gone" = "the chosen one no longer exists";
+"create.existingWarning" = "Keeping it separate is safer. In a calendar of its own everything the app filed sits together, a mistake is easy to spot, and undoing one can never touch something you put there yourself. Mixed in with your own entries the Undo button still works, but a wrong entry is a lot harder to notice.";

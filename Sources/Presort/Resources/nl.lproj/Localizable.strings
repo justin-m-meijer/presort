@@ -210,3 +210,21 @@
 "create.warnMe" = "Waarschuw me";
 "create.warnNote" = "Bij een uiterste datum krijg je zoveel dagen van tevoren een seintje. De herinnering houdt de echte datum — je wordt alleen eerder gepord, want op de laatste dag lukt iets terugsturen meestal niet meer.";
 "create.scopeNote" = "Wat de app aanmaakt gaat in een eigen agenda en een eigen herinneringenlijst. Je bestaande agenda’s worden gelezen maar nooit gewijzigd.";
+
+/* Finding out what the endpoint serves. */
+
+"model.detect" = "Modellen zoeken";
+"model.detected" = "Gevonden";
+"model.pickPrompt" = "Kies er een…";
+"model.foundCount" = "%d gevonden. Niet alles in de lijst is een chatmodel.";
+"model.listsNothing" = "Dit eindpunt noemt zijn modellen niet. Vul de naam zelf in.";
+"model.detectFailed" = "Kon het eindpunt niet bevragen: %@";
+
+/* Choosing where entries land. */
+
+"create.useExisting" = "Wegschrijven in agenda’s die ik al gebruik";
+"create.eventCalendar" = "Afspraken gaan naar";
+"create.reminderList" = "Herinneringen gaan naar";
+"create.ownOne" = "De eigen";
+"create.gone" = "de gekozen bestaat niet meer";
+"create.existingWarning" = "Apart houden is veiliger. In een eigen agenda staat alles wat de app heeft weggezet bij elkaar, zie je een misser meteen, en kan terugdraaien nooit iets raken dat je zelf hebt gezet. Tussen je eigen items werkt de knop Terugdraaien nog steeds, maar valt een verkeerde afspraak veel minder op.";

@@ -616,20 +616,79 @@ extension View {
 
 struct ModelTab: View {
     @EnvironmentObject private var preferences: Preferences
+    @State private var found: [String] = []
+    @State private var asking = false
+    @State private var note = ""
 
     var body: some View {
         Form {
             Section {
                 TextField(t("model.address"), text: $preferences.endpoint,
                           prompt: Text("http://127.0.0.1:11434/v1"))
+                SecureField(t("model.key"), text: $preferences.key)
+
+                // The field stays, always. Not every endpoint lists what it serves, and the
+                // one that does may be down at the moment you are setting this up -- a
+                // dropdown as the only way in would make the app unconfigurable.
                 TextField(t("model.name"), text: $preferences.model,
                           prompt: Text("qwen3:8b"))
-                SecureField(t("model.key"), text: $preferences.key)
+
+                if !found.isEmpty {
+                    Picker(t("model.detected"), selection: pick) {
+                        Text(t("model.pickPrompt")).tag("")
+                        ForEach(found, id: \.self) { Text($0).tag($0) }
+                    }
+                }
+
+                HStack(spacing: 8) {
+                    Button(t("model.detect")) { Task { await detect() } }
+                        .disabled(asking || preferences.endpoint
+                            .trimmingCharacters(in: .whitespaces).isEmpty)
+                    if asking { ProgressView().controlSize(.small) }
+                    Text(note).font(.system(size: 11)).foregroundStyle(.secondary)
+                        .lineLimit(2).fixedSize(horizontal: false, vertical: true)
+                    Spacer(minLength: 0)
+                }
+                .controlSize(.small)
+
                 Text(t("model.note"))
                     .font(.system(size: 11)).foregroundStyle(.secondary)
             }
         }
         .formStyle(.grouped)
+        .task(id: preferences.endpoint + "|" + preferences.key) {
+            // Debounced: the address changes on every keystroke, and every attempt is a
+            // request to somebody's machine. `task(id:)` cancels the pending one for us.
+            try? await Task.sleep(nanoseconds: 900_000_000)
+            guard !Task.isCancelled else { return }
+            await detect()
+        }
+    }
+
+    /// Selecting from the list types into the field; the field remains the stored value.
+    /// An empty tag covers "what is filled in is not one of these", which is a normal state
+    /// rather than a mistake -- LiteLLM aliases, for instance, come and go.
+    private var pick: Binding<String> {
+        Binding(get: { found.contains(preferences.model) ? preferences.model : "" },
+                set: { if !$0.isEmpty { preferences.model = $0 } })
+    }
+
+    private func detect() async {
+        let address = preferences.endpoint.trimmingCharacters(in: .whitespaces)
+        guard !address.isEmpty else { found = []; note = ""; return }
+        asking = true
+        defer { asking = false }
+        let client = ModelClient(endpoint: address, key: preferences.key, model: "")
+        do {
+            let list = try await client.availableModels()
+            found = list
+            note = list.isEmpty
+                ? t("model.listsNothing")
+                : String(format: t("model.foundCount"), list.count)
+        } catch {
+            found = []
+            note = String(format: t("model.detectFailed"), error.localizedDescription)
+        }
     }
 }
 
@@ -672,11 +731,29 @@ struct MailTab: View {
 
 struct CreatingTab: View {
     @EnvironmentObject private var preferences: Preferences
+    @State private var calendars: [CalendarStore.Choice] = []
+    @State private var lists: [CalendarStore.Choice] = []
 
     var body: some View {
         Form {
             Section {
                 TextField(t("create.calendarName"), text: $preferences.calendarName)
+
+                Toggle(t("create.useExisting"), isOn: Binding(
+                    get: { !preferences.useOwnCalendar },
+                    set: { preferences.useOwnCalendar = !$0 }))
+
+                if !preferences.useOwnCalendar {
+                    // Deliberately the loudest thing on the tab. The option is real and the
+                    // user asked for it; the reason not to take it should not be buried.
+                    Text(t("create.existingWarning"))
+                        .font(.system(size: 11))
+                        .foregroundStyle(.orange)
+                        .fixedSize(horizontal: false, vertical: true)
+
+                    target(t("create.eventCalendar"), $preferences.eventCalendarId, calendars)
+                    target(t("create.reminderList"), $preferences.reminderListId, lists)
+                }
                 Toggle(t("create.onlyHigh"), isOn: $preferences.onlyHighConfidence)
                 Toggle(t("create.auto"), isOn: $preferences.fileAutomatically)
                 Text(t("create.autoNote"))
@@ -690,10 +767,35 @@ struct CreatingTab: View {
                 }
                 Text(t("create.warnNote"))
                     .font(.system(size: 11)).foregroundStyle(.secondary)
-                Text(t("create.scopeNote"))
-                    .font(.system(size: 11)).foregroundStyle(.secondary)
+                if preferences.useOwnCalendar {
+                    Text(t("create.scopeNote"))
+                        .font(.system(size: 11)).foregroundStyle(.secondary)
+                }
             }
         }
         .formStyle(.grouped)
+        .task {
+            let store = CalendarStore(target: .init(ownName: preferences.calendarName))
+            calendars = await store.writableCalendars()
+            lists = await store.writableLists()
+        }
+    }
+
+    /// One picker. Read-only calendars are not offered at all, and a stored choice that has
+    /// since been deleted keeps its place in the list: dropping it would silently move the
+    /// target somewhere else the next time this window opens.
+    @ViewBuilder
+    private func target(_ label: String, _ choice: Binding<String>,
+                        _ options: [CalendarStore.Choice]) -> some View {
+        Picker(label, selection: choice) {
+            Text(t("create.ownOne")).tag("")
+            ForEach(options) { c in
+                Text(c.account.isEmpty ? c.title : "\(c.title) — \(c.account)").tag(c.id)
+            }
+            if !choice.wrappedValue.isEmpty,
+               !options.contains(where: { $0.id == choice.wrappedValue }) {
+                Text(t("create.gone")).tag(choice.wrappedValue)
+            }
+        }
     }
 }

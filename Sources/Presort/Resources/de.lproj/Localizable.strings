@@ -210,3 +210,21 @@
 "create.warnMe" = "Warne mich";
 "create.warnNote" = "Bei einer Frist wirst du so viele Tage vorher angestupst. Die Erinnerung behält das echte Datum — du wirst nur früher erinnert, denn am letzten Tag lässt sich etwas zurückschicken meist nicht mehr.";
 "create.scopeNote" = "Was die App anlegt, kommt in einen eigenen Kalender und eine eigene Erinnerungsliste. Deine vorhandenen Kalender werden gelesen, aber nie verändert.";
+
+/* Finding out what the endpoint serves. */
+
+"model.detect" = "Modelle suchen";
+"model.detected" = "Gefunden";
+"model.pickPrompt" = "Eines wählen …";
+"model.foundCount" = "%d gefunden. Nicht alles in der Liste ist ein Chat-Modell.";
+"model.listsNothing" = "Dieser Endpunkt nennt seine Modelle nicht. Trage den Namen selbst ein.";
+"model.detectFailed" = "Der Endpunkt ließ sich nicht abfragen: %@";
+
+/* Choosing where entries land. */
+
+"create.useExisting" = "In Kalender schreiben, die ich schon nutze";
+"create.eventCalendar" = "Termine kommen in";
+"create.reminderList" = "Erinnerungen kommen in";
+"create.ownOne" = "Der eigene";
+"create.gone" = "der gewählte existiert nicht mehr";
+"create.existingWarning" = "Getrennt zu halten ist sicherer. In einem eigenen Kalender steht alles, was die App eingetragen hat, beieinander, ein Fehler fällt sofort auf, und ein Rückgängig kann nie etwas treffen, das du selbst eingetragen hast. Zwischen deinen eigenen Einträgen funktioniert der Rückgängig-Knopf weiterhin, aber ein falscher Eintrag fällt sehr viel schwerer auf.";

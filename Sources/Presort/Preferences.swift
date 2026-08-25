@@ -109,6 +109,12 @@ final class Preferences: ObservableObject {
         set { days = newValue.rawValue }
     }
     @Published var calendarName: String { didSet { save("agendaNaam", calendarName) } }
+
+    /// Off means: write into calendars the user already uses. Default on, and it stays a
+    /// deliberate choice with a warning next to it rather than a quiet default.
+    @Published var useOwnCalendar: Bool { didSet { save("eigenAgenda", useOwnCalendar ? "1" : "0") } }
+    @Published var eventCalendarId: String { didSet { save("agendaId", eventCalendarId) } }
+    @Published var reminderListId: String { didSet { save("lijstId", reminderListId) } }
     @Published var onlyHighConfidence: Bool { didSet { save("zekerheid", onlyHighConfidence ? "1" : "0") } }
 
     @Published var fileAutomatically: Bool { didSet { save("zetZelfIn", fileAutomatically ? "1" : "0") } }
@@ -139,6 +145,9 @@ final class Preferences: ObservableObject {
         mailbox = read("postvak", "INBOX")
         days = Int(read("dagen", "3")) ?? 3
         calendarName = read("agendaNaam", "Presort")
+        useOwnCalendar = read("eigenAgenda", "1") == "1"
+        eventCalendarId = read("agendaId", "")
+        reminderListId = read("lijstId", "")
         onlyHighConfidence = read("zekerheid", "1") == "1"
         fileAutomatically = read("zetZelfIn", "0") == "1"
         leadDays = Int(read("voorsprong", "3")) ?? 3

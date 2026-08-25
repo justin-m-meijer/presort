@@ -141,7 +141,35 @@ func run() async {
 
     try? FileManager.default.removeItem(at: path)
 
-    // --- 10. every language carries every key ---
+    // --- 10. the four languages carry exactly the same keys ---
+    // This is the check that catches a forgotten translation. Asserting only on the keys
+    // the test happens to name would let a new one slip into English alone, and a missing
+    // key shows the user the key itself.
+    func keys(_ language: String) -> Set<String> {
+        let file = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent().deletingLastPathComponent()
+            .appendingPathComponent("Sources/Presort/Resources/\(language).lproj/Localizable.strings")
+        guard let text = try? String(contentsOf: file, encoding: .utf8) else { return [] }
+        return Set(text.split(separator: "\n").compactMap { line -> String? in
+            guard line.hasPrefix("\""), let close = line.dropFirst().firstIndex(of: "\"")
+            else { return nil }
+            return String(line[line.index(after: line.startIndex)..<close])
+        })
+    }
+
+    let english = keys("en")
+    expect(english.count > 150, "the English catalogue is complete (\(english.count) keys)")
+    for language in languages.dropFirst() {
+        let mine = keys(language)
+        let missing = english.subtracting(mine).sorted()
+        let extra = mine.subtracting(english).sorted()
+        expect(missing.isEmpty && extra.isEmpty,
+               "\(language): same \(english.count) keys as English"
+               + (missing.isEmpty ? "" : " -- missing \(missing)")
+               + (extra.isEmpty ? "" : " -- unknown \(extra)"))
+    }
+
+    // --- 11. every language carries every key the prompt needs ---
     // Read from the source files rather than the built bundle, so a missing translation is
     // caught before anything is packaged.
     let resources = URL(fileURLWithPath: #filePath)

@@ -210,3 +210,21 @@
 "create.warnMe" = "Me prévenir";
 "create.warnNote" = "Avec une échéance, vous êtes alerté ce nombre de jours à l’avance. Le rappel conserve la vraie date — vous êtes simplement sollicité plus tôt, car le dernier jour il est souvent trop tard pour renvoyer quelque chose.";
 "create.scopeNote" = "Ce que l’app crée va dans un calendrier et une liste de rappels dédiés. Vos calendriers existants sont lus mais jamais modifiés.";
+
+/* Finding out what the endpoint serves. */
+
+"model.detect" = "Chercher les modèles";
+"model.detected" = "Détectés";
+"model.pickPrompt" = "Choisir…";
+"model.foundCount" = "%d trouvés. Tout ce qui est listé n’est pas un modèle de chat.";
+"model.listsNothing" = "Ce point d’accès ne liste pas ses modèles. Saisissez le nom vous-même.";
+"model.detectFailed" = "Impossible d’interroger le point d’accès : %@";
+
+/* Choosing where entries land. */
+
+"create.useExisting" = "Écrire dans les calendriers que j’utilise déjà";
+"create.eventCalendar" = "Les rendez-vous vont dans";
+"create.reminderList" = "Les rappels vont dans";
+"create.ownOne" = "Le sien";
+"create.gone" = "celui choisi n’existe plus";
+"create.existingWarning" = "Garder les choses séparées est plus sûr. Dans un calendrier dédié, tout ce que l’app a classé se trouve au même endroit, une erreur saute aux yeux, et une annulation ne peut jamais toucher ce que vous avez saisi vous-même. Mêlé à vos propres entrées, le bouton Annuler fonctionne toujours, mais une entrée erronée passe bien plus facilement inaperçue.";

@@ -34,7 +34,7 @@ final class Core: ObservableObject {
         NotificationDelegate.shared.connect()
 
         if calendarStore == nil {
-            let a = CalendarStore(name: preferences.calendarName)
+            let a = CalendarStore(target: calendarTarget)
             calendarStore = a
             do { try await a.askAccess() }
             catch { statusLine = error.localizedDescription }
@@ -43,6 +43,15 @@ final class Core: ObservableObject {
             await Notifier.askPermission()
         }
         scheduleAlarm(preferences.rhythmMinutes)
+    }
+
+    /// Read fresh on every write, so changing where things land in Settings takes effect
+    /// at once instead of at the next launch.
+    private var calendarTarget: CalendarStore.Target {
+        CalendarStore.Target(
+            ownName: preferences.calendarName,
+            eventCalendarId: preferences.useOwnCalendar ? "" : preferences.eventCalendarId,
+            reminderListId: preferences.useOwnCalendar ? "" : preferences.reminderListId)
     }
 
     private func scheduleAlarm(_ minutes: Int) {
@@ -144,6 +153,7 @@ final class Core: ObservableObject {
             return
         }
         guard let calendarStore else { return }
+        await calendarStore.setTarget(calendarTarget)
         do {
             let id: String
             if v.category == .event {
