@@ -32,8 +32,8 @@
     <g transform="translate(258 84)">
       <rect x="-30" y="-24" width="60" height="46" rx="8" class="accent"
             fill="currentColor" fill-opacity=".08" stroke="currentColor" stroke-opacity=".22">
-        <animate attributeName="fill-opacity" values=".08;.22;.08"
-                 dur="4.8s" begin="0s" repeatCount="indefinite"/>
+        <animate attributeName="fill-opacity" values=".08;.08;.24;.08"
+                 keyTimes="0;.55;.8;1" dur="4.8s" begin="0s" repeatCount="indefinite"/>
       </rect>
       <g class="accent" stroke="currentColor" stroke-width="1.4" fill="none">
         <rect x="-7" y="-15" width="14" height="14" rx="2"/>
@@ -69,36 +69,40 @@
     </g>
   </defs>
 
-  <!-- Four letters on one 9.6s cycle. Two are on their way in while two are on their way
-       out, half a cycle apart, so there is always something moving and never a crowd. -->
+  <!-- Four letters, each on its own 4.8s round, spaced a quarter apart with a negative
+       start time. That last bit does two things at once: something is always in flight,
+       and at time zero, which is what an image tag shows because it freezes the animation,
+       every letter is already somewhere along its way instead of piled up at the start.
+
+       The previous version squeezed all four into one 9.6s round using keyPoints, which
+       left the outgoing letters standing still and visible beside the model for half of
+       every round. -->
   <g class="accent" fill="currentColor">
     <g class="letter">
       <use href="#letter" x="88" y="84"/>
-      <animateMotion dur="9.6s" begin="0s" repeatCount="indefinite" calcMode="linear"
-                     keyPoints="0;1;1" keyTimes="0;.5;1" path="m0,0 h144"/>
-      <animate attributeName="opacity" dur="9.6s" begin="0s" repeatCount="indefinite"
-               values="1;1;1;0;0" keyTimes="0;.06;.44;.5;1"/>
-    </g>
-    <g class="letter">
-      <use href="#letter" x="296" y="79"/>
-      <animateMotion dur="9.6s" begin="0s" repeatCount="indefinite" calcMode="linear"
-                     keyPoints="0;0;1" keyTimes="0;.5;1" path="m0,0 q60,0 130,-39"/>
-      <animate attributeName="opacity" dur="9.6s" begin="0s" repeatCount="indefinite"
-               values="1;0;1;1;0" keyTimes="0;.5;.56;.94;1"/>
+      <animateMotion dur="4.8s" begin="0s" repeatCount="indefinite" path="m0,0 h144"/>
+      <animate attributeName="opacity" dur="4.8s" begin="0s" repeatCount="indefinite"
+               values="0;1;1;0" keyTimes="0;.12;.82;1"/>
     </g>
     <g class="letter">
       <use href="#letter" x="88" y="84"/>
-      <animateMotion dur="9.6s" begin="4.8s" repeatCount="indefinite" calcMode="linear"
-                     keyPoints="0;1;1" keyTimes="0;.5;1" path="m0,0 h144"/>
-      <animate attributeName="opacity" dur="9.6s" begin="4.8s" repeatCount="indefinite"
-               values="1;1;1;0;0" keyTimes="0;.06;.44;.5;1"/>
+      <animateMotion dur="4.8s" begin="-2.4s" repeatCount="indefinite" path="m0,0 h144"/>
+      <animate attributeName="opacity" dur="4.8s" begin="-2.4s" repeatCount="indefinite"
+               values="0;1;1;0" keyTimes="0;.12;.82;1"/>
+    </g>
+    <g class="letter">
+      <use href="#letter" x="296" y="79"/>
+      <animateMotion dur="4.8s" begin="-1.2s" repeatCount="indefinite"
+                     path="m0,0 q60,0 130,-39"/>
+      <animate attributeName="opacity" dur="4.8s" begin="-1.2s" repeatCount="indefinite"
+               values="0;1;1;0" keyTimes="0;.12;.82;1"/>
     </g>
     <g class="letter">
       <use href="#letter" x="296" y="89"/>
-      <animateMotion dur="9.6s" begin="4.8s" repeatCount="indefinite" calcMode="linear"
-                     keyPoints="0;0;1" keyTimes="0;.5;1" path="m0,0 q60,0 130,39"/>
-      <animate attributeName="opacity" dur="9.6s" begin="4.8s" repeatCount="indefinite"
-               values="1;0;1;1;0" keyTimes="0;.5;.56;.94;1"/>
+      <animateMotion dur="4.8s" begin="-3.6s" repeatCount="indefinite"
+                     path="m0,0 q60,0 130,39"/>
+      <animate attributeName="opacity" dur="4.8s" begin="-3.6s" repeatCount="indefinite"
+               values="0;1;1;0" keyTimes="0;.12;.82;1"/>
     </g>
   </g>
 </svg>
