@@ -249,3 +249,7 @@
 "welcome.lane.calendar" = "Calendar";
 "welcome.lane.reminders" = "Reminders";
 "welcome.menuItem" = "Welcome to Presort";
+
+/* Filing outcomes. */
+
+"status.noDestination" = "nowhere to file it";

@@ -246,3 +246,7 @@
 "welcome.lane.calendar" = "Kalender";
 "welcome.lane.reminders" = "Erinnerungen";
 "welcome.menuItem" = "Willkommen bei Presort";
+
+/* Filing outcomes. */
+
+"status.noDestination" = "kein Ort zum Eintragen";

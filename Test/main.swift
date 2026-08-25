@@ -131,6 +131,7 @@ func run() async {
     expect(queue.items.first?.title == "Pay the bill", "and keeps its contents")
     expect(queue.items.first?.detector == nil, "herkenner is empty, not fatal")
     expect(queue.items.first?.confidence == nil, "zekerheid too")
+    expect(queue.items.first?.destination == nil, "and bestemming, added later still")
     expect(queue.isSeen("message-2"), "and the seen messages come along")
 
     // write the new fields and read them back

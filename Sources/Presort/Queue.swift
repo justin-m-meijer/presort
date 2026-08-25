@@ -58,6 +58,11 @@ struct Proposal: Identifiable, Codable, Hashable {
     /// same reason. Only "hoog" may be filed automatically.
     var confidence: String?
 
+    /// Which destination filed this. Optional, like the two above: proposals from before
+    /// there was more than one destination have no answer, and everything back then went
+    /// to the calendar.
+    var destination: String?
+
     /// The names of the fields in `voorstellen.json`, spelled out so that renaming a
     /// property here cannot silently orphan everything the user has already collected.
     enum CodingKeys: String, CodingKey {
@@ -79,6 +84,7 @@ struct Proposal: Identifiable, Codable, Hashable {
         case error = "fout"
         case detector = "herkenner"
         case confidence = "zekerheid"
+        case destination = "bestemming"
     }
 }
 

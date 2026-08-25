@@ -246,3 +246,7 @@
 "welcome.lane.calendar" = "Agenda";
 "welcome.lane.reminders" = "Herinneringen";
 "welcome.menuItem" = "Welkom bij Presort";
+
+/* Filing outcomes. */
+
+"status.noDestination" = "nergens om het weg te zetten";

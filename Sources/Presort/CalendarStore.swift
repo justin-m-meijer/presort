@@ -17,10 +17,15 @@ actor CalendarStore {
         var reminderListId: String = ""
     }
 
+    /// How many days before a deadline the alert fires. Kept here rather than passed in
+    /// with every proposal: it is a property of this destination, not of what is filed.
+    private var leadDays: Int = 3
+
     init(target: Target) { self.target = target }
 
     /// Called before every write, so a change in Settings takes effect without a restart.
     func setTarget(_ t: Target) { target = t }
+    func setLeadDays(_ d: Int) { leadDays = d }
 
     /// What the user can pick from. Read-only calendars -- subscribed ones, holidays -- are
     /// left out: offering them means offering a write that will fail.
@@ -126,8 +131,7 @@ actor CalendarStore {
         return e.eventIdentifier ?? ""
     }
 
-    func makeReminder(what: String, dueDate: Date?, note: String,
-                         leadDays: Int = 0) throws -> String {
+    func makeReminder(what: String, dueDate: Date?, note: String) throws -> String {
         store.reset()
         let r = EKReminder(eventStore: store)
         r.title = what
@@ -172,5 +176,30 @@ actor CalendarStore {
         store.reset()
         guard let r = store.calendarItem(withIdentifier: reminderId) as? EKReminder else { return }
         try store.remove(r, commit: true)
+    }
+}
+
+
+extension CalendarStore: Destination {
+    nonisolated var id: String { "calendar" }
+
+    func file(_ proposal: Proposal) async throws -> Filing {
+        if proposal.category == .event {
+            guard let start = proposal.start, let end = proposal.end else {
+                throw Problem.saveFailed("")
+            }
+            // Checked against the calendar itself rather than against what we remember
+            // filing: the saved state can be lost, a calendar cannot.
+            if hasEvent(title: proposal.title, start: start) { return .alreadyThere }
+            return .filed(try makeEvent(title: proposal.title, start: start, end: end,
+                                        location: proposal.location, note: proposal.note))
+        }
+        return .filed(try makeReminder(what: proposal.title, dueDate: proposal.dueDate,
+                                       note: proposal.note))
+    }
+
+    func undo(_ proposal: Proposal) async throws {
+        if proposal.category == .event { try remove(eventId: proposal.itemId) }
+        else { try remove(reminderId: proposal.itemId) }
     }
 }

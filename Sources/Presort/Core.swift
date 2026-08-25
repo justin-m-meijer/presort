@@ -157,35 +157,51 @@ final class Core: ObservableObject {
             queue.update(v.id) { $0.status = .discarded }
             return
         }
-        guard let calendarStore else { return }
-        await calendarStore.setTarget(calendarTarget)
+        guard let where_ = await destination(for: v) else {
+            queue.update(v.id) { $0.status = .failed; $0.error = t("status.noDestination") }
+            return
+        }
         do {
-            let id: String
-            if v.category == .event {
-                guard let b = v.start, let e = v.end else { return }
-                if await calendarStore.hasEvent(title: v.title, start: b) {
-                    queue.update(v.id) { $0.status = .discarded; $0.error = t("status.alreadyThere") }
-                    return
-                }
-                id = try await calendarStore.makeEvent(title: v.title, start: b, end: e,
-                                                   location: v.location, note: v.note)
-            } else {
-                id = try await calendarStore.makeReminder(
-                    what: v.title, dueDate: v.dueDate, note: v.note,
-                    leadDays: preferences.leadDays)
+            switch try await where_.file(v) {
+            case .filed(let id):
+                queue.update(v.id) { $0.status = .filed; $0.itemId = id
+                                     $0.destination = where_.id }
+            case .alreadyThere:
+                queue.update(v.id) { $0.status = .discarded; $0.error = t("status.alreadyThere") }
             }
-            queue.update(v.id) { $0.status = .filed; $0.itemId = id }
         } catch {
             queue.update(v.id) { $0.status = .failed; $0.error = error.localizedDescription }
             statusLine = error.localizedDescription
         }
     }
 
+    /// Which destination a proposal belongs to, brought up to date with Settings first.
+    /// One place to look, so adding a destination is not a matter of finding every `if`.
+    private func destination(for v: Proposal) async -> (any Destination)? {
+        switch v.category {
+        case .event, .reminder:
+            guard let calendarStore else { return nil }
+            await calendarStore.setTarget(calendarTarget)
+            await calendarStore.setLeadDays(preferences.leadDays)
+            return calendarStore
+        case .skipped:
+            return nil
+        }
+    }
+
+    /// Where something went, for undoing it. Falls back to the calendar: proposals filed
+    /// before there was a choice have nothing stored, and back then there was nowhere else.
+    private func destination(named id: String?) -> (any Destination)? {
+        switch id {
+        case nil, "calendar": return calendarStore
+        default: return nil
+        }
+    }
+
     func undo(_ v: Proposal) async {
-        guard let calendarStore, !v.itemId.isEmpty else { return }
+        guard !v.itemId.isEmpty, let where_ = destination(named: v.destination) else { return }
         do {
-            if v.category == .event { try await calendarStore.remove(eventId: v.itemId) }
-            else { try await calendarStore.remove(reminderId: v.itemId) }
+            try await where_.undo(v)
             queue.update(v.id) { $0.status = .discarded; $0.error = t("status.undone") }
         } catch {
             statusLine = error.localizedDescription
