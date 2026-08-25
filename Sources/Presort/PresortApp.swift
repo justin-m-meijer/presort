@@ -772,6 +772,7 @@ struct CreatingTab: View {
 
                     target(t("create.eventCalendar"), $preferences.eventCalendarId, calendars)
                     target(t("create.reminderList"), $preferences.reminderListId, lists)
+
                 }
                 Toggle(t("create.onlyHigh"), isOn: $preferences.onlyHighConfidence)
                 Toggle(t("create.auto"), isOn: $preferences.fileAutomatically)
@@ -806,9 +807,14 @@ struct CreatingTab: View {
     @ViewBuilder
     private func target(_ label: String, _ choice: Binding<String>,
                         _ options: [CalendarStore.Choice]) -> some View {
+        // The app's own one is named in the field above, so name it here too -- "its own"
+        // tells you nothing when the answer is sitting three rows higher. Once that calendar
+        // exists it is also a normal writable calendar, so it is filtered out of the rest:
+        // otherwise the same thing appears twice under two different names.
+        let own = preferences.calendarName.trimmingCharacters(in: .whitespaces)
         Picker(label, selection: choice) {
-            Text(t("create.ownOne")).tag("")
-            ForEach(options) { c in
+            Text(own.isEmpty ? t("create.ownOne") : own).tag("")
+            ForEach(options.filter { $0.title != own }) { c in
                 Text(c.account.isEmpty ? c.title : "\(c.title) — \(c.account)").tag(c.id)
             }
             if !choice.wrappedValue.isEmpty,
