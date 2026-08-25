@@ -253,3 +253,19 @@
 /* Filing outcomes. */
 
 "status.noDestination" = "nowhere to file it";
+
+/* Connections to services outside this Mac. */
+
+"tab.connections" = "Connections";
+"paperless.name" = "Paperless-ngx";
+"paperless.enable" = "Send documents to Paperless-ngx";
+"paperless.address" = "Address";
+"paperless.token" = "API token";
+"paperless.tags" = "Tags to add (comma separated)";
+"paperless.createCorrespondent" = "Create a correspondent if the sender is unknown";
+"paperless.check" = "Test the connection";
+"paperless.check.ok" = "Connected. %1$d documents, %2$d tags.";
+"paperless.note" = "Attachments worth keeping are uploaded with what the mail already says about them: title, sender and date. Only tags that already exist are applied — nothing new is created in your archive. The token is kept in the Keychain, not in the settings file.";
+"paperless.error.notConfigured" = "No token filled in yet.";
+"paperless.error.http" = "Paperless answered with code %1$d. %2$@";
+"paperless.error.rejected" = "Paperless did not accept it: %@";

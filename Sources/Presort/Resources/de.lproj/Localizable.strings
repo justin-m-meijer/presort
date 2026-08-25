@@ -250,3 +250,19 @@
 /* Filing outcomes. */
 
 "status.noDestination" = "kein Ort zum Eintragen";
+
+/* Connections to services outside this Mac. */
+
+"tab.connections" = "Verbindungen";
+"paperless.name" = "Paperless-ngx";
+"paperless.enable" = "Dokumente an Paperless-ngx senden";
+"paperless.address" = "Adresse";
+"paperless.token" = "API-Token";
+"paperless.tags" = "Schlagwörter zum Hinzufügen (durch Komma getrennt)";
+"paperless.createCorrespondent" = "Korrespondenten anlegen, wenn der Absender unbekannt ist";
+"paperless.check" = "Verbindung testen";
+"paperless.check.ok" = "Verbunden. %1$d Dokumente, %2$d Schlagwörter.";
+"paperless.note" = "Anhänge, die es wert sind, werden mit dem hochgeladen, was die E-Mail schon über sie sagt: Titel, Absender und Datum. Es werden nur bereits vorhandene Schlagwörter gesetzt — in deinem Archiv entsteht nichts Neues. Das Token liegt im Schlüsselbund, nicht in der Einstellungsdatei.";
+"paperless.error.notConfigured" = "Noch kein Token eingetragen.";
+"paperless.error.http" = "Paperless hat mit Code %1$d geantwortet. %2$@";
+"paperless.error.rejected" = "Paperless hat es nicht angenommen: %@";

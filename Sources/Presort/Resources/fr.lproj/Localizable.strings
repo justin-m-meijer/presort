@@ -250,3 +250,19 @@
 /* Filing outcomes. */
 
 "status.noDestination" = "aucun endroit où le classer";
+
+/* Connections to services outside this Mac. */
+
+"tab.connections" = "Connexions";
+"paperless.name" = "Paperless-ngx";
+"paperless.enable" = "Envoyer les documents vers Paperless-ngx";
+"paperless.address" = "Adresse";
+"paperless.token" = "Jeton d’API";
+"paperless.tags" = "Étiquettes à ajouter (séparées par des virgules)";
+"paperless.createCorrespondent" = "Créer un correspondant si l’expéditeur est inconnu";
+"paperless.check" = "Tester la connexion";
+"paperless.check.ok" = "Connecté. %1$d documents, %2$d étiquettes.";
+"paperless.note" = "Les pièces jointes qui méritent d’être conservées sont envoyées avec ce que le courriel en dit déjà : titre, expéditeur et date. Seules les étiquettes existantes sont appliquées — rien de nouveau n’est créé dans votre archive. Le jeton est conservé dans le trousseau, pas dans le fichier de réglages.";
+"paperless.error.notConfigured" = "Aucun jeton renseigné.";
+"paperless.error.http" = "Paperless a répondu avec le code %1$d. %2$@";
+"paperless.error.rejected" = "Paperless ne l’a pas accepté : %@";

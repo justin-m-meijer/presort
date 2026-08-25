@@ -231,6 +231,15 @@ enum Dates {
         return f.string(from: Date())
     }
 
+    /// "2026-09-04". What paperless wants for a document's date, and unambiguous
+    /// everywhere else too.
+    static func isoDay(_ d: Date) -> String {
+        let f = DateFormatter()
+        f.locale = Locale(identifier: "en_US_POSIX")
+        f.dateFormat = "yyyy-MM-dd"
+        return f.string(from: d)
+    }
+
     static func read(_ s: String?) -> Date? {
         guard let s, !s.isEmpty else { return nil }
         for pattern in ["yyyy-MM-dd'T'HH:mm", "yyyy-MM-dd'T'HH:mm:ss", "yyyy-MM-dd"] {

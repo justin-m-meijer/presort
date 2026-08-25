@@ -393,6 +393,8 @@ struct PreferencesWindow: View {
                 .tabItem { Label(t("tab.auto"), systemImage: "clock") }
             CreatingTab()
                 .tabItem { Label(t("tab.create"), systemImage: "calendar.badge.plus") }
+            ConnectionsTab()
+                .tabItem { Label(t("tab.connections"), systemImage: "app.connected.to.app.below.fill") }
         }
         .frame(width: 620, height: 480)
     }

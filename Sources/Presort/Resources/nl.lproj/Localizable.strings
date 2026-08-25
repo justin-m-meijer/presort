@@ -250,3 +250,19 @@
 /* Filing outcomes. */
 
 "status.noDestination" = "nergens om het weg te zetten";
+
+/* Connections to services outside this Mac. */
+
+"tab.connections" = "Koppelingen";
+"paperless.name" = "Paperless-ngx";
+"paperless.enable" = "Documenten naar Paperless-ngx sturen";
+"paperless.address" = "Adres";
+"paperless.token" = "API-token";
+"paperless.tags" = "Tags om toe te voegen (komma’s ertussen)";
+"paperless.createCorrespondent" = "Correspondent aanmaken als de afzender onbekend is";
+"paperless.check" = "Verbinding testen";
+"paperless.check.ok" = "Verbonden. %1$d documenten, %2$d tags.";
+"paperless.note" = "Bijlagen die het bewaren waard zijn gaan erheen met wat de mail er al over zegt: titel, afzender en datum. Alleen tags die al bestaan worden toegepast — er wordt niets nieuws in je archief aangemaakt. De token staat in de sleutelhanger, niet in het instellingenbestand.";
+"paperless.error.notConfigured" = "Nog geen token ingevuld.";
+"paperless.error.http" = "Paperless antwoordde met code %1$d. %2$@";
+"paperless.error.rejected" = "Paperless nam het niet aan: %@";

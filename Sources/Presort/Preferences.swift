@@ -130,6 +130,42 @@ final class Preferences: ObservableObject {
     /// with everything else the app remembers about you.
     @Published var hasSeenWelcome: Bool { didSet { save("welkomGezien", hasSeenWelcome ? "1" : "0") } }
 
+    // MARK: connections
+    //
+    // Each service outside the Mac gets its own block here. Paperless-ngx is the first, and
+    // is written out flat rather than as a generic bag: a second connection wants its own
+    // fields anyway, and a bag of strings would only postpone deciding what they are.
+
+    @Published var paperlessOn: Bool { didSet { save("paperlessAan", paperlessOn ? "1" : "0") } }
+    @Published var paperlessAddress: String { didSet { save("paperlessAdres", paperlessAddress) } }
+    /// In the Keychain, not here: this one opens somebody's whole archive.
+    @Published var paperlessToken: String {
+        didSet { Keychain.set(paperlessToken, for: "paperless-token") }
+    }
+    @Published var paperlessTags: String { didSet { save("paperlessTags", paperlessTags) } }
+    @Published var paperlessCreatesCorrespondents: Bool {
+        didSet { save("paperlessCorrespondent", paperlessCreatesCorrespondents ? "1" : "0") }
+    }
+
+    /// The tag names as typed, comma separated, emptied of blanks.
+    var paperlessTagList: [String] {
+        paperlessTags.split(separator: ",")
+            .map { $0.trimmingCharacters(in: .whitespaces) }
+            .filter { !$0.isEmpty }
+    }
+
+    var paperlessConfig: Paperless.Config {
+        Paperless.Config(address: paperlessAddress, token: paperlessToken,
+                         tagNames: paperlessTagList,
+                         createCorrespondent: paperlessCreatesCorrespondents)
+    }
+
+    var paperlessReady: Bool {
+        paperlessOn
+        && !paperlessAddress.trimmingCharacters(in: .whitespaces).isEmpty
+        && !paperlessToken.isEmpty
+    }
+
     @Published var rhythmMinutes: Int { didSet { save("ritme", String(rhythmMinutes)) } }
     @Published var notificationsOn: Bool { didSet { save("meldingen", notificationsOn ? "1" : "0") } }
 
@@ -156,6 +192,11 @@ final class Preferences: ObservableObject {
         fileAutomatically = read("zetZelfIn", "0") == "1"
         leadDays = Int(read("voorsprong", "3")) ?? 3
         hasSeenWelcome = read("welkomGezien", "0") == "1"
+        paperlessOn = read("paperlessAan", "0") == "1"
+        paperlessAddress = read("paperlessAdres", "")
+        paperlessToken = Keychain.get("paperless-token")
+        paperlessTags = read("paperlessTags", "presort")
+        paperlessCreatesCorrespondents = read("paperlessCorrespondent", "0") == "1"
         rhythmMinutes = Int(read("ritme", "0")) ?? 0
         notificationsOn = read("meldingen", "1") == "1"
     }
