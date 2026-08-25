@@ -1,13 +1,13 @@
-# Bouwrommel van SwiftPM (452 MB, hoort niet in versiebeheer)
+# SwiftPM build output (452 MB, does not belong in version control)
 .build/
 
-# De gebouwde app zelf
+# The built app itself
 build/
 
 # macOS
 .DS_Store
 
-# Xcode, mocht je die er ooit bij pakken
+# Xcode, should you ever open it there
 *.xcodeproj/
 *.xcworkspace/
 xcuserdata/
