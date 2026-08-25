@@ -133,7 +133,7 @@ struct MainWindow: View {
                         HStack(alignment: .firstTextBaseline) {
                             Text(v.subject).lineLimit(1)
                             Spacer(minLength: 12)
-                            Text(v.reason).foregroundStyle(.tertiary).lineLimit(1)
+                            Text(v.reasonText).foregroundStyle(.tertiary).lineLimit(1)
                         }
                         .font(.system(size: 12))
                         .padding(.horizontal, 16)
@@ -278,14 +278,7 @@ struct ProposalCard: View {
         return name.uppercased()
     }
 
-    /// A colour per shape, so which kind of thing this is registers before you read it.
-    private var tint: Color {
-        switch proposal.category {
-        case .event: return .accentColor
-        case .document: return .purple
-        default: return .orange
-        }
-    }
+    private var tint: Color { proposal.category.tint }
 }
 
 /// Shows what will end up in the calendar or the list, field by field, with
@@ -375,11 +368,19 @@ struct HandledRow: View {
     let undoAction: () -> Void
 
     var body: some View {
-        HStack(alignment: .firstTextBaseline, spacing: 10) {
+        HStack(alignment: .firstTextBaseline, spacing: 8) {
+            // The colour carries the shape, so a glance down the list separates
+            // appointments from tasks from documents without reading a word. Dimmed when
+            // nothing was created: a discarded row should not look like a filed one.
+            Circle()
+                .fill(proposal.category.tint.opacity(proposal.status == .filed ? 1 : 0.28))
+                .frame(width: 6, height: 6)
+                .padding(.trailing, 2)
             Text(proposal.title.isEmpty ? proposal.subject : proposal.title).lineLimit(1)
             Spacer(minLength: 8)
-            Text(proposal.error.isEmpty ? proposal.status.getoond : proposal.error)
-                .foregroundStyle(.tertiary).lineLimit(1)
+            Text(outcome)
+                .foregroundStyle(proposal.status == .failed ? Color.orange : Color.secondary)
+                .lineLimit(1)
             if proposal.status == .filed && !proposal.itemId.isEmpty {
                 Button(t("button.undo"), action: undoAction).controlSize(.mini)
             }
@@ -387,6 +388,43 @@ struct HandledRow: View {
         .font(.system(size: 12))
         .padding(.horizontal, 16)
         .padding(.vertical, 5)
+    }
+
+    /// What actually became of it. "Filed" says a decision was taken and nothing about
+    /// where to go looking; a reminder in a list and a document in an archive are found in
+    /// very different places.
+    private var outcome: String {
+        switch proposal.status {
+        case .filed:     return proposal.category.landed
+        case .discarded: return proposal.error.isEmpty
+                                ? t("status.discarded") : proposal.errorText
+        case .failed:    return proposal.error.isEmpty
+                                ? t("status.failed") : proposal.errorText
+        case .waiting:   return t("status.waiting")
+        }
+    }
+}
+
+extension Proposal.Category {
+    /// One colour per shape, used on the card and in the handled list alike -- the same
+    /// thing should not be blue in one place and orange in another.
+    var tint: Color {
+        switch self {
+        case .event:    return .accentColor
+        case .document: return .purple
+        case .reminder: return .orange
+        case .skipped:  return .gray
+        }
+    }
+
+    /// Where something of this shape ends up, in words.
+    var landed: String {
+        switch self {
+        case .event:    return t("outcome.event")
+        case .reminder: return t("outcome.reminder")
+        case .document: return t("outcome.document")
+        case .skipped:  return ""
+        }
     }
 }
 

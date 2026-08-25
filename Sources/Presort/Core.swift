@@ -161,7 +161,7 @@ final class Core: ObservableObject {
             return
         }
         guard let where_ = await destination(for: v) else {
-            queue.update(v.id) { $0.status = .failed; $0.error = t("status.noDestination") }
+            queue.update(v.id) { $0.status = .failed; $0.error = Proposal.Note.noDestination }
             return
         }
         do {
@@ -170,7 +170,7 @@ final class Core: ObservableObject {
                 queue.update(v.id) { $0.status = .filed; $0.itemId = id
                                      $0.destination = where_.id }
             case .alreadyThere:
-                queue.update(v.id) { $0.status = .discarded; $0.error = t("status.alreadyThere") }
+                queue.update(v.id) { $0.status = .discarded; $0.error = Proposal.Note.alreadyThere }
             }
         } catch {
             queue.update(v.id) { $0.status = .failed; $0.error = error.localizedDescription }
@@ -212,7 +212,7 @@ final class Core: ObservableObject {
         guard !v.itemId.isEmpty, let where_ = destination(named: v.destination) else { return }
         do {
             try await where_.undo(v)
-            queue.update(v.id) { $0.status = .discarded; $0.error = t("status.undone") }
+            queue.update(v.id) { $0.status = .discarded; $0.error = Proposal.Note.undone }
         } catch {
             statusLine = error.localizedDescription
         }

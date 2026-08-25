@@ -79,8 +79,6 @@
 "scan.nothingNew" = "Rien de nouveau dans %@.";
 "scan.working" = "Traitement de « %@ »…";
 "skip.noContent" = "aucun contenu lisible";
-"skip.noneOfOne" = "aucun élément : %@";
-"skip.noneOfMany" = "aucun des %d points";
 "scan.failedTail" = " %d n’ont pas abouti, ils reviendront la prochaine fois.";
 "scan.nothingFound" = "%d messages examinés, rien trouvé.";
 "scan.found" = "%1$d proposition(s) issues de %2$d messages.";
@@ -291,3 +289,14 @@
 /* The attachment names in the frame. */
 
 "frame.attachments" = "Pièces jointes :";
+
+/* What became of a proposal. */
+
+"status.waiting" = "en attente";
+"status.filed" = "classé";
+"status.discarded" = "écarté";
+"status.failed" = "a échoué";
+"outcome.event" = "rendez-vous dans votre calendrier";
+"outcome.reminder" = "rappel dans votre liste";
+"outcome.document" = "document dans Paperless";
+"skip.nothingRelevant" = "Aucune action pertinente à traiter";

@@ -82,8 +82,6 @@
 "scan.nothingNew" = "Nothing new in %@.";
 "scan.working" = "Working on ‘%@’…";
 "skip.noContent" = "no readable content";
-"skip.noneOfOne" = "no %@";
-"skip.noneOfMany" = "none of the %d points";
 "scan.failedTail" = " %d did not work, those come back next time.";
 "scan.nothingFound" = "%d messages checked, nothing found.";
 "scan.found" = "%1$d proposal(s) from %2$d messages.";
@@ -294,3 +292,14 @@
 /* The attachment names in the frame. */
 
 "frame.attachments" = "Attachments:";
+
+/* What became of a proposal. */
+
+"status.waiting" = "waiting";
+"status.filed" = "filed";
+"status.discarded" = "discarded";
+"status.failed" = "did not work";
+"outcome.event" = "appointment in your calendar";
+"outcome.reminder" = "reminder in your list";
+"outcome.document" = "document in Paperless";
+"skip.nothingRelevant" = "No relevant actions to process";

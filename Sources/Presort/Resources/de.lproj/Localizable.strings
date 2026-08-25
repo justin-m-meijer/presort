@@ -79,8 +79,6 @@
 "scan.nothingNew" = "Nichts Neues in %@.";
 "scan.working" = "„%@“ wird bearbeitet …";
 "skip.noContent" = "kein lesbarer Inhalt";
-"skip.noneOfOne" = "kein %@";
-"skip.noneOfMany" = "keiner der %d Punkte";
 "scan.failedTail" = " %d haben nicht geklappt, die kommen beim nächsten Mal wieder.";
 "scan.nothingFound" = "%d Nachrichten geprüft, nichts gefunden.";
 "scan.found" = "%1$d Vorschlag/Vorschläge aus %2$d Nachrichten.";
@@ -291,3 +289,14 @@
 /* The attachment names in the frame. */
 
 "frame.attachments" = "Anhänge:";
+
+/* What became of a proposal. */
+
+"status.waiting" = "wartet";
+"status.filed" = "eingetragen";
+"status.discarded" = "verworfen";
+"status.failed" = "hat nicht geklappt";
+"outcome.event" = "Termin in deinem Kalender";
+"outcome.reminder" = "Erinnerung in deiner Liste";
+"outcome.document" = "Dokument in Paperless";
+"skip.nothingRelevant" = "Keine relevanten Aktionen zu verarbeiten";

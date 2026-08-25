@@ -153,6 +153,19 @@ func run() async {
 
     try? FileManager.default.removeItem(at: path)
 
+    // Sentences from older files must still read as sentences, not as raw leftovers.
+    for (stored, expected) in [("niets van de 6 punten", "skip.nothingRelevant"),
+                               ("none of the 6 points", "skip.nothingRelevant"),
+                               ("geen afspraken", "skip.nothingRelevant"),
+                               ("no readable content", "skip.noContent"),
+                               ("already there", "status.alreadyThere"),
+                               ("undone", "status.undone")] {
+        expect(Proposal.Note.text(stored) == t(expected),
+               "an older \"\(stored)\" still reads properly")
+    }
+    expect(Proposal.Note.text("Paperless answered with code 500") ==
+           "Paperless answered with code 500", "and a server's own words are left alone")
+
     // --- 10. the four languages carry exactly the same keys ---
     // This is the check that catches a forgotten translation. Asserting only on the keys
     // the test happens to name would let a new one slip into English alone, and a missing

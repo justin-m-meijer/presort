@@ -94,7 +94,7 @@ final class Scanner: ObservableObject {
 
             guard !text.isEmpty else {
                 // Read fine, there was simply nothing in it. That is a judgement.
-                noteSkipped(b, t("skip.noContent"))
+                noteSkipped(b, Proposal.Note.noContent)
                 queue.markSeen(b.id)
                 outcome.checked += 1
                 continue
@@ -164,9 +164,7 @@ final class Scanner: ObservableObject {
                 outcome.titles.append(v.title)
                 outcome.ids.append(v.id)
             } else {
-                noteSkipped(b, points.count == 1
-                    ? String(format: t("skip.noneOfOne"), points[0].name.lowercased())
-                    : String(format: t("skip.noneOfMany"), points.count))
+                noteSkipped(b, Proposal.Note.nothingRelevant)
             }
             queue.markSeen(b.id)
             outcome.checked += 1

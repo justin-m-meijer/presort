@@ -79,8 +79,6 @@
 "scan.nothingNew" = "Niets nieuws in %@.";
 "scan.working" = "Bezig met ‘%@’…";
 "skip.noContent" = "geen leesbare inhoud";
-"skip.noneOfOne" = "geen %@";
-"skip.noneOfMany" = "geen van de %d punten";
 "scan.failedTail" = " %d lukten niet, die komen volgende keer terug.";
 "scan.nothingFound" = "%d berichten nagekeken, niets gevonden.";
 "scan.found" = "%1$d voorstel(len) uit %2$d berichten.";
@@ -291,3 +289,14 @@
 /* The attachment names in the frame. */
 
 "frame.attachments" = "Bijlagen:";
+
+/* What became of a proposal. */
+
+"status.waiting" = "wacht";
+"status.filed" = "weggezet";
+"status.discarded" = "weggegooid";
+"status.failed" = "lukte niet";
+"outcome.event" = "afspraak in je agenda";
+"outcome.reminder" = "herinnering in je lijst";
+"outcome.document" = "document in Paperless";
+"skip.nothingRelevant" = "Geen relevante acties te verwerken";

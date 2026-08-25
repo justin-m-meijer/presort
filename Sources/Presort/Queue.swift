@@ -12,20 +12,21 @@ struct Proposal: Identifiable, Codable, Hashable {
         case document = "document"
         case skipped = "overgeslagen"
     }
-    /// Spelled out for the same reason. For the screen there is `getoond`.
+    /// Spelled out for the same reason. For the screen there is `shown`.
     enum Status: String, Codable {
         case waiting = "open"
         case filed = "goedgekeurd"
         case discarded = "geweigerd"
         case failed = "mislukt"
 
-        /// What the user reads. Kept apart from the stored value on purpose.
-        var getoond: String {
+        /// What the user reads. Kept apart from the stored value on purpose -- and read
+        /// from the catalogue, so it is not the one corner of the window still in English.
+        var shown: String {
             switch self {
-            case .waiting:        return "waiting"
-            case .filed: return "filed"
-            case .discarded:   return "discarded"
-            case .failed:     return "failed"
+            case .waiting:   return t("status.waiting")
+            case .filed:     return t("status.filed")
+            case .discarded: return t("status.discarded")
+            case .failed:    return t("status.failed")
             }
         }
     }
@@ -76,6 +77,62 @@ struct Proposal: Identifiable, Codable, Hashable {
     /// there was more than one destination have no answer, and everything back then went
     /// to the calendar.
     var destination: String?
+
+    /// Why nothing came of a message, and what became of one that did.
+    ///
+    /// These are stored, so they are codes and not sentences. Writing the sentence into the
+    /// file was the old way, and it froze the wording of the day it was written: rephrasing
+    /// it left every existing row saying the old thing forever, and a change of language
+    /// left them in the old language. Anything unrecognised is shown as it stands, which is
+    /// what keeps those older rows readable.
+    enum Note {
+        static let noContent = "no-content"
+        static let nothingRelevant = "nothing-relevant"
+        static let alreadyThere = "already-there"
+        static let undone = "undone"
+        static let noDestination = "no-destination"
+
+        static func text(_ raw: String) -> String {
+            switch code(raw) {
+            case noContent:       return t("skip.noContent")
+            case nothingRelevant: return t("skip.nothingRelevant")
+            case alreadyThere:    return t("status.alreadyThere")
+            case undone:          return t("status.undone")
+            case noDestination:   return t("status.noDestination")
+            default:              return raw
+            }
+        }
+
+        /// Rows written before these were codes still carry a whole sentence, in whatever
+        /// language was current at the time. Recognising the ones this app itself wrote
+        /// keeps an existing list readable instead of half translated. Anything else is
+        /// left alone: it is probably a message from a server, and inventing a code for it
+        /// would be guessing.
+        private static func code(_ raw: String) -> String {
+            if let known = spelledOut[raw] { return known }
+            // "niets van de 6 punten", "none of the 6 points", "keiner der 6 Punkte"
+            if raw.range(of: "[0-9]+ +(punten|points|Punkte)", options: .regularExpression) != nil {
+                return nothingRelevant
+            }
+            // The single-detector wording: "geen afspraken", "no appointments".
+            for start in ["geen ", "no ", "aucun", "kein "] where raw.hasPrefix(start) {
+                return nothingRelevant
+            }
+            return raw
+        }
+
+        private static let spelledOut: [String: String] = [
+            "no readable content": noContent, "geen leesbare inhoud": noContent,
+            "aucun contenu lisible": noContent, "kein lesbarer Inhalt": noContent,
+            "already there": alreadyThere, "stond er al": alreadyThere,
+            "déjà présent": alreadyThere, "war schon da": alreadyThere,
+            "undone": undone, "teruggedraaid": undone,
+            "annulé": undone, "rückgängig gemacht": undone,
+        ]
+    }
+
+    var reasonText: String { Note.text(reason) }
+    var errorText: String { Note.text(error) }
 
     /// The names of the fields in `voorstellen.json`, spelled out so that renaming a
     /// property here cannot silently orphan everything the user has already collected.
