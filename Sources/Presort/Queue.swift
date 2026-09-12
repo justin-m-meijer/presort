@@ -10,6 +10,7 @@ struct Proposal: Identifiable, Codable, Hashable {
         case event = "afspraak"
         case reminder = "herinnering"
         case document = "document"
+        case parcel = "pakket"
         case skipped = "overgeslagen"
     }
     /// Spelled out for the same reason. For the screen there is `shown`.
@@ -77,6 +78,14 @@ struct Proposal: Identifiable, Codable, Hashable {
     /// there was more than one destination have no answer, and everything back then went
     /// to the calendar.
     var destination: String?
+
+    /// A parcel's tracking number, in capitals without spaces, and its carrier as the mail named
+    /// it. Matched to one of Parcel's carriers only when filing -- that list changes -- and
+    /// `carrierCode` holds the one picked on the card, if somebody picked. For a parcel,
+    /// `dueDate` is the day it arrives.
+    var trackingNumber: String?
+    var carrier: String?
+    var carrierCode: String?
 
     /// Why nothing came of a message, and what became of one that did.
     ///
@@ -161,6 +170,9 @@ struct Proposal: Identifiable, Codable, Hashable {
         case keywords = "trefwoorden"
         case correspondent = "correspondent"
         case destination = "bestemming"
+        case trackingNumber = "trackingnummer"
+        case carrier = "vervoerder"
+        case carrierCode = "vervoerderCode"
     }
 }
 

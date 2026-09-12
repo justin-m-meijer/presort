@@ -31,6 +31,7 @@ struct PresortApp: App {
             PreferencesWindow(detectors: core.detectors)
                 .environmentObject(core.preferences)
                 .environmentObject(core.queue)
+                .environmentObject(core)
         }
     }
 }
@@ -122,6 +123,8 @@ struct MainWindow: View {
             LazyVStack(alignment: .leading, spacing: 0) {
                 if !preferences.isConfigured {
                     SetupNote()
+                } else if let problem = core.modelProblem {
+                    ModelProblemNote(text: problem)
                 }
 
                 SectionHeading(t("section.waiting"))
@@ -256,6 +259,9 @@ struct ProposalCard: View {
     let proposal: Proposal
     let approve: () -> Void
     let reject: () -> Void
+    @EnvironmentObject private var preferences: Preferences
+    /// Parcel's carriers, for a parcel's card. Empty for everything else.
+    @State private var carriers: [ParcelApp.Carrier] = []
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -270,9 +276,10 @@ struct ProposalCard: View {
                     .clipShape(RoundedRectangle(cornerRadius: 3))
                 Text(proposal.title).font(.system(size: 13, weight: .semibold)).lineLimit(2)
             }
-            WhatLands(proposal: proposal)
+            WhatLands(proposal: proposal, carriers: carriers)
             HStack(spacing: 8) {
                 Button(t("button.fileIt"), action: approve).buttonStyle(.borderedProminent)
+                    .disabled(!canFile)
                 Button(t("button.discard"), action: reject)
             }
             .controlSize(.small)
@@ -285,6 +292,18 @@ struct ProposalCard: View {
         .overlay(RoundedRectangle(cornerRadius: 7).stroke(Color(nsColor: .separatorColor)))
         .padding(.horizontal, 16)
         .padding(.vertical, 4)
+        .task(id: proposal.id) {
+            if proposal.category == .parcel { carriers = await ParcelCarriers.shared.all() }
+        }
+    }
+
+    /// A parcel for Parcel needs a carrier Parcel knows, and without Parcel it needs a day for
+    /// its reminder. Filing without would spend a request on a refusal, or do nothing at all.
+    private var canFile: Bool {
+        guard proposal.category == .parcel else { return true }
+        guard preferences.parcelOn else { return proposal.dueDate != nil }
+        return carriers.isEmpty
+            || ParcelApp.carrier(for: proposal, among: carriers, region: ParcelApp.macRegion) != nil
     }
 
     private var badge: String {
@@ -292,6 +311,7 @@ struct ProposalCard: View {
             switch proposal.category {
             case .event: return t("badge.event")
             case .document: return t("badge.document")
+            case .parcel: return t("badge.parcel")
             default: return t("badge.reminder")
             }
         }()
@@ -306,7 +326,9 @@ struct ProposalCard: View {
 /// picked out of the mail -- which is a different thing from what you are agreeing to.
 struct WhatLands: View {
     let proposal: Proposal
+    var carriers: [ParcelApp.Carrier] = []
     @EnvironmentObject private var preferences: Preferences
+    @EnvironmentObject private var queue: Queue
 
     var body: some View {
         VStack(alignment: .leading, spacing: 5) {
@@ -321,6 +343,14 @@ struct WhatLands: View {
                                                 ?? t("card.dateOfMail"))
                     row(t("card.from"), proposal.correspondent ?? proposal.sender)
                     row(t("card.tags"), (proposal.keywords ?? []).joined(separator: ", "))
+                } else if proposal.category == .parcel {
+                    row(t("card.tracking"), proposal.trackingNumber ?? "")
+                    if preferences.parcelOn && !carriers.isEmpty {
+                        carrierRow
+                    } else {
+                        row(t("card.carrier"), proposal.carrier ?? "")
+                    }
+                    row(t("card.arrives"), proposal.dueDate.map(Dates.longDay) ?? t("card.arrivesUnknown"))
                 } else if proposal.category == .event {
                     row(t("card.when"), Dates.spanText(proposal.start, proposal.end))
                     if !proposal.location.isEmpty { row(t("card.where"), proposal.location) }
@@ -329,10 +359,18 @@ struct WhatLands: View {
                     row(t("card.alert"), alert)
                     if !proposal.amount.isEmpty { row(t("card.amount"), proposal.amount) }
                 }
-                if proposal.category != .document { row(t("card.note"), proposal.note) }
+                if proposal.category != .document && proposal.category != .parcel {
+                    row(t("card.note"), proposal.note)
+                }
             }
             if proposal.category == .document {
                 Text(t("card.paperlessNote"))
+                    .font(.system(size: 10))
+                    .foregroundStyle(.tertiary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            if proposal.category == .parcel {
+                Text(parcelNote)
                     .font(.system(size: 10))
                     .foregroundStyle(.tertiary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -348,6 +386,10 @@ struct WhatLands: View {
         switch proposal.category {
         case .document:
             return t("card.intoPaperless")
+        case .parcel:
+            return preferences.parcelOn
+                ? t("card.intoParcel")
+                : String(format: t("card.intoList"), preferences.calendarName)
         case .event:
             return String(format: t("card.intoCalendar"), preferences.calendarName)
         default:
@@ -365,6 +407,41 @@ struct WhatLands: View {
                      ? "alert.noneNoLead" : "alert.nonePassed")
         }
         return String(format: t("alert.at"), Dates.long(wake), preferences.leadDays)
+    }
+
+    /// The carrier as a choice: the one matched from the mail when that worked, otherwise
+    /// every carrier Parcel knows, with what the mail said as the prompt.
+    private var carrierRow: some View {
+        GridRow {
+            Text(t("card.carrier"))
+                .font(.system(size: 11))
+                .foregroundStyle(.tertiary)
+                .gridColumnAlignment(.leading)
+                .frame(width: 62, alignment: .leading)
+            Picker("", selection: Binding(
+                get: {
+                    ParcelApp.carrier(for: proposal, among: carriers, region: ParcelApp.macRegion)?.code ?? ""
+                },
+                set: { code in
+                    queue.update(proposal.id) { $0.carrierCode = code.isEmpty ? nil : code }
+                })) {
+                Text(proposal.carrier.map { String(format: t("card.carrierPick"), $0) }
+                     ?? t("card.carrierPickNone")).tag("")
+                ForEach(carriers) { c in Text(c.name).tag(c.code) }
+            }
+            .labelsHidden()
+            .controlSize(.small)
+            .frame(maxWidth: 260, alignment: .leading)
+        }
+    }
+
+    private var parcelNote: String {
+        if proposal.dueDate == nil && !preferences.parcelOn { return t("card.parcelNothing") }
+        var s = t(proposal.dueDate == nil ? "card.parcelNoDay" : "card.parcelReminder")
+        if preferences.parcelOn {
+            s += " " + String(format: t("card.parcelQuota"), ParcelQuota().used(), ParcelApp.dailyLimit)
+        }
+        return s
     }
 
     private func row(_ label: String, _ value: String) -> some View {
@@ -401,7 +478,8 @@ struct HandledRow: View {
             Text(outcome)
                 .foregroundStyle(proposal.status == .failed ? Color.orange : Color.secondary)
                 .lineLimit(1)
-            if proposal.status == .filed && !proposal.itemId.isEmpty {
+            // Not for parcels: Parcel has no way to take a delivery back.
+            if proposal.status == .filed && !proposal.itemId.isEmpty && proposal.category != .parcel {
                 Button(t("button.undo"), action: undoAction).controlSize(.mini)
             }
         }
@@ -415,13 +493,20 @@ struct HandledRow: View {
     /// very different places.
     private var outcome: String {
         switch proposal.status {
-        case .filed:     return proposal.category.landed
+        case .filed:     return proposal.category == .parcel ? parcelLanded : proposal.category.landed
         case .discarded: return proposal.error.isEmpty
                                 ? t("status.discarded") : proposal.errorText
         case .failed:    return proposal.error.isEmpty
                                 ? t("status.failed") : proposal.errorText
         case .waiting:   return t("status.waiting")
         }
+    }
+
+    /// A parcel can have gone to Parcel, into your reminders, or both.
+    private var parcelLanded: String {
+        guard ParcelFiling.inParcel(proposal.itemId) else { return t("outcome.reminder") }
+        return t(ParcelFiling.reminderId(in: proposal.itemId) == nil
+                 ? "outcome.parcel" : "outcome.parcelAndReminder")
     }
 }
 
@@ -432,6 +517,7 @@ extension Proposal.Category {
         switch self {
         case .event:    return .accentColor
         case .document: return .purple
+        case .parcel:   return .teal
         case .reminder: return .orange
         case .skipped:  return .gray
         }
@@ -443,6 +529,7 @@ extension Proposal.Category {
         case .event:    return t("outcome.event")
         case .reminder: return t("outcome.reminder")
         case .document: return t("outcome.document")
+        case .parcel:   return t("outcome.parcel")
         case .skipped:  return ""
         }
     }
@@ -454,6 +541,29 @@ struct SetupNote: View {
             Text(t("setup.title")).font(.system(size: 13, weight: .semibold))
             Text(t("setup.body"))
                 .font(.system(size: 12)).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.orange.opacity(0.10))
+        .clipShape(RoundedRectangle(cornerRadius: 7))
+        .padding(.horizontal, 16)
+        .padding(.top, 12)
+    }
+}
+
+/// Said once, above the queue, when the model cannot do the work: then nothing is being found
+/// at all, and that deserves more than a line in the status bar.
+struct ModelProblemNote: View {
+    let text: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(t("modelcheck.problem.title")).font(.system(size: 13, weight: .semibold))
+            Text(text)
+                .font(.system(size: 12)).foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+            SettingsLink { Text(t("modelcheck.openSettings")) }
+                .controlSize(.small)
         }
         .padding(12)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -725,9 +835,16 @@ extension View {
 
 struct ModelTab: View {
     @EnvironmentObject private var preferences: Preferences
+    @EnvironmentObject private var core: Core
     @State private var found: [String] = []
     @State private var asking = false
     @State private var note = ""
+    @State private var testing = false
+    @State private var progress = ""
+    /// In the order they were tested, so the list does not jump around while it fills.
+    @State private var tested: [String] = []
+    @State private var results: [String: ModelClient.Check] = [:]
+    @State private var skipped: Set<String> = []
 
     var body: some View {
         Form {
@@ -763,6 +880,32 @@ struct ModelTab: View {
                 Text(t("model.note"))
                     .font(.system(size: 11)).foregroundStyle(.secondary)
             }
+
+            Section {
+                HStack(spacing: 8) {
+                    Button(t("modelcheck.testOne")) { Task { await test([preferences.model]) } }
+                        .disabled(testing || !preferences.isConfigured)
+                    Button(t("modelcheck.testAll")) { Task { await test(found) } }
+                        .disabled(testing || found.isEmpty)
+                    if testing { ProgressView().controlSize(.small) }
+                    Text(progress).font(.system(size: 11)).foregroundStyle(.secondary).lineLimit(1)
+                    Spacer(minLength: 0)
+                }
+                .controlSize(.small)
+
+                ForEach(tested, id: \.self) { name in resultRow(name) }
+
+                Toggle(t("model.thinkingOff"), isOn: Binding(
+                    get: { preferences.thinkingOff },
+                    set: { preferences.setThinkingOff($0, for: preferences.model) }))
+                    .disabled(preferences.model.trimmingCharacters(in: .whitespaces).isEmpty)
+                Text(t("model.thinkingOffNote"))
+                    .font(.system(size: 11)).foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                Text(t("modelcheck.note"))
+                    .font(.system(size: 11)).foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
         }
         .formStyle(.grouped)
         .task(id: preferences.endpoint + "|" + preferences.key) {
@@ -771,6 +914,64 @@ struct ModelTab: View {
             try? await Task.sleep(nanoseconds: 900_000_000)
             guard !Task.isCancelled else { return }
             await detect()
+        }
+    }
+
+    /// One question per model, one model at a time: a server on your own network asked about
+    /// nine models at once answers none of them quickly.
+    private func test(_ names: [String]) async {
+        let list = names.map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
+        guard !list.isEmpty else { return }
+        testing = true
+        defer { testing = false; progress = "" }
+        for (i, name) in list.enumerated() {
+            if !tested.contains(name) { tested.append(name) }
+            // Embedding, speech and the like cannot hold a conversation; asking them is a
+            // request wasted, and on a hosted service one paid for.
+            if ModelTab.notForChat(name) {
+                skipped.insert(name)
+                continue
+            }
+            progress = String(format: t("modelcheck.progress"), i + 1, list.count)
+            let client = ModelClient(endpoint: preferences.endpoint, key: preferences.key, model: name)
+            let result = await client.check(startingWith: preferences.modelsWithoutThinking.contains(name))
+            results[name] = result
+            core.adopt(result, for: name)
+        }
+    }
+
+    private static func notForChat(_ name: String) -> Bool {
+        name.range(of: "embed|stt|tts|whisper|rerank|speech|transcri",
+                   options: [.regularExpression, .caseInsensitive]) != nil
+    }
+
+    /// Choosing a model that only works with thinking off brings that setting along.
+    private func use(_ name: String) {
+        if results[name]?.health == .needsThinkingOff { preferences.setThinkingOff(true, for: name) }
+        preferences.model = name
+    }
+
+    private func resultRow(_ name: String) -> some View {
+        let result = results[name]
+        let usable = result?.usable ?? false
+        return HStack(alignment: .firstTextBaseline, spacing: 8) {
+            Image(systemName: result == nil ? "minus.circle"
+                  : usable ? "checkmark.circle.fill" : "exclamationmark.triangle.fill")
+                .foregroundStyle(result == nil ? Color.secondary : usable ? Color.green : Color.orange)
+            VStack(alignment: .leading, spacing: 1) {
+                Text(name).font(.system(size: 12, weight: .medium))
+                Text(result?.sentence ?? (skipped.contains(name) ? t("modelcheck.skipped") : "…"))
+                    .font(.system(size: 11)).foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            Spacer(minLength: 8)
+            if usable {
+                if name == preferences.model {
+                    Text(t("modelcheck.inUse")).font(.system(size: 11)).foregroundStyle(.secondary)
+                } else {
+                    Button(t("modelcheck.use")) { use(name) }.controlSize(.small)
+                }
+            }
         }
     }
 

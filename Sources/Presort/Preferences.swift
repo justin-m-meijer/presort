@@ -99,6 +99,25 @@ final class Preferences: ObservableObject {
     @Published var endpoint: String { didSet { save("eindpunt", endpoint) } }
     @Published var key: String { didSet { save("sleutel", key) } }
     @Published var model: String { didSet { save("model", model) } }
+
+    /// Models that only answer with thinking switched off, by name. Found by the model check
+    /// and sent along as `chat_template_kwargs`. Not every server accepts that field, so it is
+    /// never on by default.
+    @Published var modelsWithoutThinking: [String] {
+        didSet { save("zonderDenken", modelsWithoutThinking.joined(separator: "\n")) }
+    }
+
+    var thinkingOff: Bool { modelsWithoutThinking.contains(model) }
+
+    func setThinkingOff(_ off: Bool, for name: String) {
+        var list = modelsWithoutThinking.filter { $0 != name }
+        if off { list.append(name) }
+        if list != modelsWithoutThinking { modelsWithoutThinking = list }
+    }
+
+    var modelClient: ModelClient {
+        ModelClient(endpoint: endpoint, key: key, model: model, thinkingOff: thinkingOff)
+    }
     @Published var account: String { didSet { save("account", account) } }
     @Published var mailbox: String { didSet { save("postvak", mailbox) } }
     @Published var days: Int { didSet { save("dagen", String(days)) } }
@@ -190,6 +209,46 @@ final class Preferences: ObservableObject {
         && !paperlessToken.isEmpty
     }
 
+    // Parcel (parcelapp.net), the delivery tracker.
+
+    @Published var parcelOn: Bool { didSet { save("parcelAan", parcelOn ? "1" : "0") } }
+    /// In the Keychain like the Paperless token, and read as late, for the same reason.
+    @Published var parcelKey: String = "" {
+        didSet {
+            guard !loadingParcelKey else { return }
+            Keychain.set(parcelKey, for: "parcel-api-key")
+        }
+    }
+    private var loadingParcelKey = false
+    private var parcelKeyLoaded = false
+
+    func loadParcelKey() async {
+        guard !parcelKeyLoaded else { return }
+        parcelKeyLoaded = true
+        let stored = await Task.detached(priority: .utility) {
+            Keychain.get("parcel-api-key")
+        }.value
+        guard !stored.isEmpty else { return }
+        loadingParcelKey = true
+        parcelKey = stored
+        loadingParcelKey = false
+    }
+
+    /// PostNL and a few others only track with the postcode the parcel is going to.
+    @Published var parcelPostcode: String { didSet { save("parcelPostcode", parcelPostcode) } }
+    @Published var parcelPush: Bool { didSet { save("parcelPush", parcelPush ? "1" : "0") } }
+    /// How many a day go to Parcel without asking. Parcel allows twenty; fifteen leaves five
+    /// for the ones you file by hand.
+    @Published var parcelPerDay: Int { didSet { save("parcelPerDag", String(parcelPerDay)) } }
+
+    var parcelConfig: ParcelApp.Config {
+        ParcelApp.Config(apiKey: parcelKey, postcode: parcelPostcode,
+                         language: String((catalogue.preferredLocalizations.first ?? "en").prefix(2)),
+                         pushConfirmation: parcelPush)
+    }
+
+    var parcelReady: Bool { parcelOn && !parcelKey.isEmpty }
+
     @Published var rhythmMinutes: Int { didSet { save("ritme", String(rhythmMinutes)) } }
     @Published var notificationsOn: Bool { didSet { save("meldingen", notificationsOn ? "1" : "0") } }
 
@@ -205,6 +264,7 @@ final class Preferences: ObservableObject {
         endpoint = read("eindpunt", "http://127.0.0.1:11434/v1")
         key = read("sleutel", "")
         model = read("model", "")
+        modelsWithoutThinking = read("zonderDenken", "").split(separator: "\n").map(String.init)
         account = read("account", "iCloud")
         mailbox = read("postvak", "INBOX")
         days = Int(read("dagen", "3")) ?? 3
@@ -220,6 +280,10 @@ final class Preferences: ObservableObject {
         paperlessAddress = read("paperlessAdres", "")
         paperlessTags = read("paperlessTags", "presort")
         paperlessCreatesCorrespondents = read("paperlessCorrespondent", "0") == "1"
+        parcelOn = read("parcelAan", "0") == "1"
+        parcelPostcode = read("parcelPostcode", "")
+        parcelPush = read("parcelPush", "1") == "1"
+        parcelPerDay = min(max(Int(read("parcelPerDag", "15")) ?? 15, 0), ParcelApp.dailyLimit)
         rhythmMinutes = Int(read("ritme", "0")) ?? 0
         notificationsOn = read("meldingen", "1") == "1"
     }

@@ -26,12 +26,14 @@ func t(_ key: String) -> String {
 struct Detector: Identifiable, Codable, Hashable {
     /// The shapes the app can check for and create. Each one answers a different question:
     /// an appointment has a start and an end, a reminder has a final date, a document is a
-    /// file worth keeping. Anything the user invents falls into one of the three.
+    /// file worth keeping, a parcel has a tracking number. Anything the user invents falls
+    /// into one of the four.
     enum Kind: String, Codable, CaseIterable, Identifiable {
         // Spelled out: these end up in herkenners.json for the user's own points.
         case event = "afspraak"
         case reminder = "herinnering"
         case document = "document"
+        case parcel = "pakket"
 
         var id: String { rawValue }
 
@@ -40,6 +42,7 @@ struct Detector: Identifiable, Codable, Hashable {
             case .event: return t("shape.event")
             case .reminder: return t("shape.reminder")
             case .document: return t("shape.document")
+            case .parcel: return t("shape.parcel")
             }
         }
 
@@ -48,6 +51,7 @@ struct Detector: Identifiable, Codable, Hashable {
             case .event: return .event
             case .reminder: return .reminder
             case .document: return .document
+            case .parcel: return .parcel
             }
         }
 
@@ -90,6 +94,7 @@ extension Detector {
         case .event:    return t("schema.event")
         case .reminder: return t("schema.reminder")
         case .document: return t("schema.document")
+        case .parcel:   return t("schema.parcel")
         }
     }
 
@@ -120,13 +125,13 @@ extension Detector {
     ///
     /// The ids are stable and never translated -- they are the keys under which the user's
     /// own changes are stored. Only what you read comes from the string catalogue.
-    static let builtInIds = ["afspraak", "actie", "rekening", "verloopt", "ophalen", "reis",
-                             "bewaren"]
+    static let builtInIds = ["afspraak", "actie", "rekening", "verloopt", "ophalen", "pakket",
+                             "reis", "bewaren"]
 
     /// Which shape each built-in point produces. A table rather than a chain of conditions,
     /// because the next one added should be one line and not a puzzle.
     private static let builtInKinds: [String: Kind] = [
-        "afspraak": .event, "reis": .event, "bewaren": .document,
+        "afspraak": .event, "reis": .event, "bewaren": .document, "pakket": .parcel,
     ]
 
     static var builtIn: [Detector] {

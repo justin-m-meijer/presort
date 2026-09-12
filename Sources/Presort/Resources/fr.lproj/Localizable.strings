@@ -258,7 +258,7 @@
 "paperless.token" = "Jeton d’API";
 "paperless.tags" = "Étiquettes à ajouter (séparées par des virgules)";
 "paperless.createCorrespondent" = "Créer un correspondant si l’expéditeur est inconnu";
-"paperless.check" = "Tester la connexion";
+"connection.check" = "Tester la connexion";
 "paperless.check.ok" = "Connecté. %1$d documents, %2$d étiquettes.";
 "paperless.note" = "Les pièces jointes qui méritent d’être conservées sont envoyées avec ce que le courriel en dit déjà : titre, expéditeur et date. Seules les étiquettes existantes sont appliquées — rien de nouveau n’est créé dans votre archive. Le jeton est conservé dans le trousseau, pas dans le fichier de réglages.";
 "paperless.error.notConfigured" = "Aucun jeton renseigné.";
@@ -300,3 +300,68 @@
 "outcome.reminder" = "rappel dans votre liste";
 "outcome.document" = "document dans Paperless";
 "skip.nothingRelevant" = "Aucune action pertinente à traiter";
+
+/* Colis : la quatrième forme, et Parcel comme endroit où les envoyer. */
+
+"shape.parcel" = "Colis à suivre";
+"schema.parcel" = "{\"gevonden\": true|false, \"trackingnummer\": \"exactement tel qu’il figure dans le texte\",\n \"vervoerder\": \"l’entreprise qui le livre, ou vide\", \"omschrijving\": \"ce qui arrive, en quelques mots, en français\",\n \"bezorgdatum\": \"AAAA-MM-JJ ou vide\", \"zekerheid\": \"hoog|midden|laag\"}";
+"detector.pakket.name" = "Colis en route";
+"detector.pakket.summary" = "Un avis d’expédition avec un numéro de suivi";
+"detector.pakket.instruction" = "Un colis en route vers le destinataire, avec un NUMÉRO DE SUIVI dans le texte : une confirmation d’expédition d’une boutique, ou un avis du transporteur qui le livre.\n\nMettez dans \"trackingnummer\" le numéro de suivi exactement tel qu’il figure dans le texte. Un numéro de commande, de client ou de facture n’est PAS un numéro de suivi ; si le texte ne contient que ceux-là, répondez false.\n\nMettez dans \"vervoerder\" l’entreprise qui livre le colis, telle que le texte la nomme — pas la boutique. Laissez vide si le texte ne le dit pas.\n\nMettez dans \"omschrijving\" ce qui arrive, en quelques mots, ou le nom de la boutique si le texte ne dit pas quoi. Décrivez ce colis ; ne reprenez jamais un exemple de ces instructions.\n\nMettez dans \"bezorgdatum\" le jour où le texte annonce le colis, sinon laissez vide. Ne le calculez pas vous-même.\n\nCe n’est pas cela : un colis déjà livré, quelque chose qui attend dans un point relais, une étiquette de retour, ou de la publicité.";
+"badge.parcel" = "Colis";
+"card.intoParcel" = "IRA DANS PARCEL";
+"card.tracking" = "Suivi";
+"card.carrier" = "Transporteur";
+"card.carrierPick" = "choisir — le courriel dit « %@ »";
+"card.carrierPickNone" = "choisir — le courriel ne le dit pas";
+"card.arrives" = "Arrive";
+"card.arrivesUnknown" = "absent du courriel";
+"card.parcelReminder" = "Un rappel avec le numéro de suivi est ajouté à votre liste pour ce jour-là.";
+"card.parcelNoDay" = "Le rappel suivra dès que Parcel connaîtra le jour de livraison.";
+"card.parcelNothing" = "Le courriel ne donne aucun jour et Parcel n’est pas connecté : il n’y a encore rien à classer.";
+"card.parcelQuota" = "%1$d des %2$d ajouts Parcel utilisés aujourd’hui.";
+"outcome.parcel" = "dans Parcel";
+"outcome.parcelAndReminder" = "dans Parcel, avec un rappel";
+"parcel.name" = "Parcel";
+"parcel.enable" = "Envoyer les colis vers Parcel";
+"parcel.key" = "Clé d’API";
+"parcel.postcode" = "Votre code postal";
+"parcel.push" = "Laisser Parcel m’avertir à chaque ajout";
+"parcel.perDay" = "Les %d premiers de la journée sont ajoutés d’eux-mêmes";
+"parcel.perDay.none" = "Aucun n’est ajouté de lui-même";
+"parcel.note" = "Parcel autorise 20 ajouts par jour, refus compris, et uniquement avec Premium. Presort les compte et s’arrête avant Parcel ; ceux qui sont ajoutés d’eux-mêmes vous laissent le reste de la journée. Le numéro de suivi doit figurer dans le courriel, et un colis déjà suivi par Parcel n’est pas ajouté une seconde fois. Votre code postal n’est envoyé qu’aux transporteurs qui en ont besoin, comme PostNL. Parcel ne permet pas de supprimer une livraison, cela ne peut donc pas être annulé. La clé est conservée dans le trousseau.";
+"parcel.check.ok" = "Connecté. Parcel suit %1$d colis ; %2$d des %3$d ajouts utilisés aujourd’hui.";
+"parcel.error.notConfigured" = "Aucune clé d’API renseignée.";
+"parcel.error.http" = "Parcel a répondu avec le code %1$d. %2$@";
+"parcel.error.rejected" = "Parcel ne l’a pas accepté : %@";
+"parcel.error.noTrackingNumber" = "Il n’y a aucun numéro de suivi à envoyer.";
+"parcel.error.noCarrier" = "Choisissez d’abord le transporteur sur la carte.";
+"parcel.error.needsPostcode" = "%1$@ a besoin de votre code postal. Renseignez-le dans %2$@.";
+"parcel.error.dailyLimit" = "Les %d ajouts Parcel du jour sont épuisés. Il reste en attente jusqu’à demain.";
+"parcel.error.nothingToDo" = "Le courriel ne donne aucun jour et Parcel n’est pas connecté.";
+"parcel.reminder.title" = "Colis attendu : %@";
+"parcel.reminder.note" = "Numéro de suivi : %1$@\nTransporteur : %2$@\nDe : %3$@\nObjet : %4$@";
+
+/* Tester le modèle. */
+
+"probe.subject" = "Votre rendez-vous est confirmé";
+"probe.body" = "Bonjour, votre rendez-vous chez l’hygiéniste dentaire est confirmé pour le 14 octobre à 10:30, au cabinet Smile, 1 rue Principale. Merci d’arriver dix minutes en avance.";
+"model.error.ranOut" = "Le modèle a consacré toute sa réponse à réfléchir et n’a rendu aucun texte. Testez le modèle dans les réglages.";
+"model.thinkingOff" = "Désactiver la réflexion pour ce modèle";
+"model.thinkingOffNote" = "Certains modèles réfléchissent avant de répondre et peuvent y consacrer toute leur réponse. Ceci demande au serveur de sauter cette étape. Tous les serveurs ne l’acceptent pas ; le test ne l’active donc que lorsque cela aide.";
+"modelcheck.works" = "Fonctionne. Réponse en %.1f s.";
+"modelcheck.worksWithoutThinking" = "Fonctionne avec la réflexion désactivée. Réponse en %.1f s.";
+"modelcheck.thinksTooLong" = "Consacre toute sa réponse à réfléchir et n’arrive jamais à la réponse, même quand on lui demande de sauter cette étape. Choisissez un modèle sans étape de réflexion.";
+"modelcheck.noForm" = "Répond, mais pas sous la forme dont l’application a besoin : « %@ »";
+"modelcheck.wrong" = "Répond sous la bonne forme, mais s’est trompé sur un exemple simple.";
+"modelcheck.unreachable" = "Impossible de l’interroger : %@";
+"modelcheck.problem.title" = "Le modèle ne donne pas de réponses utilisables";
+"modelcheck.problem.body" = "%1$@ : %2$@";
+"modelcheck.openSettings" = "Choisir un autre modèle";
+"modelcheck.testOne" = "Tester ce modèle";
+"modelcheck.testAll" = "Tester tous les modèles";
+"modelcheck.progress" = "Test %1$d sur %2$d…";
+"modelcheck.skipped" = "Pas un modèle de conversation ; ignoré.";
+"modelcheck.use" = "Utiliser";
+"modelcheck.inUse" = "utilisé";
+"modelcheck.note" = "Un test envoie un court message inventé — jamais votre courrier — et vérifie la réponse. Un modèle hébergé peut facturer un petit montant pour cela.";

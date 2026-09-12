@@ -14,5 +14,8 @@ cp -R Sources/Presort/Resources/*.lproj "$OUT/"
 swiftc -o "$OUT/test" \
     Sources/Presort/Detectors.swift \
     Sources/Presort/Queue.swift \
+    Sources/Presort/Destination.swift \
+    Sources/Presort/ParcelApp.swift \
+    Sources/Presort/Model.swift \
     Test/main.swift
 "$OUT/test"

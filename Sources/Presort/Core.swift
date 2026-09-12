@@ -18,12 +18,20 @@ final class Core: ObservableObject {
     /// rather than in the window that happens to show it.
     @Published var showWelcome = false
 
+    /// A sentence when the model is not giving usable answers. Shown above the queue until a
+    /// run or a check says otherwise: without a working model nothing is found at all, and a
+    /// status line saying "3 did not work" is easy to read past.
+    @Published var modelProblem: String?
+
     private lazy var scanner = Scanner(preferences: preferences, queue: queue,
                                        detectors: detectors)
     private var calendarStore: CalendarStore?
     /// Built once and kept, so its settings can be refreshed rather than a new client made
     /// for every document.
     private lazy var paperless = Paperless(config: preferences.paperlessConfig)
+    private lazy var parcel = ParcelApp(config: preferences.parcelConfig)
+    /// When Parcel was last asked for delivery days. That list allows twenty asks an hour.
+    private var parcelsAskedAt: Date?
     private var subscriptions = Set<AnyCancellable>()
 
     init() {
@@ -32,6 +40,16 @@ final class Core: ObservableObject {
             .removeDuplicates()
             .sink { [weak self] minutes in
                 Task { @MainActor in self?.scheduleAlarm(minutes) }
+            }
+            .store(in: &subscriptions)
+
+        // Another model, address or key deserves a fresh verdict. Debounced: these change on
+        // every keystroke, and every check is a request to somebody's machine.
+        Publishers.CombineLatest3(preferences.$model, preferences.$endpoint, preferences.$key)
+            .dropFirst()
+            .debounce(for: .seconds(2), scheduler: RunLoop.main)
+            .sink { [weak self] _ in
+                Task { @MainActor in await self?.checkModel() }
             }
             .store(in: &subscriptions)
     }
@@ -51,6 +69,7 @@ final class Core: ObservableObject {
             await Notifier.askPermission()
         }
         scheduleAlarm(preferences.rhythmMinutes)
+        await checkModel()
     }
 
     /// Read fresh on every write, so changing where things land in Settings takes effect
@@ -86,8 +105,16 @@ final class Core: ObservableObject {
         }
         busy = false
 
-        let auto = preferences.fileAutomatically ? await fileAutomatically(outcome.ids) : AutoFiled()
+        let auto = await fileAutomatically(outcome.ids)
         statusLine = outcome.statusLine + auto.tail
+        // One usable answer is proof enough. Nothing but failures from the model is worth a
+        // closer look, and a notification when nobody is watching the window.
+        if outcome.checked > 0 {
+            modelProblem = nil
+        } else if outcome.modelFailed > 0 {
+            await checkModel(notify: automatic)
+        }
+        await followParcels()
         alarm.reschedule()
 
         if automatic, preferences.notificationsOn, outcome.proposed > 0 {
@@ -130,18 +157,24 @@ final class Core: ObservableObject {
         }
     }
 
-    /// Files whatever the model marked as "hoog" by itself. The rest keeps waiting: the
-    /// point is that you have less to go through, not that you no longer can.
+    /// Files whatever the model marked as "hoog" by itself, when that is switched on. The rest
+    /// keeps waiting: the point is that you have less to go through, not that you no longer
+    /// can. Parcels have a rule of their own, see `mayFileParcelByItself`.
     private func fileAutomatically(_ ids: [String]) async -> AutoFiled {
         var result = AutoFiled()
         for id in ids {
             guard let v = queue.items.first(where: { $0.id == id }), v.status == .waiting else {
                 continue
             }
-            // No confidence given counts as not confident. Silence is not consent here.
-            guard v.confidence == "hoog" else {
-                result.stillWaiting += 1
-                continue
+            if v.category == .parcel {
+                guard await mayFileParcelByItself(v) else { continue }
+            } else {
+                guard preferences.fileAutomatically else { continue }
+                // No confidence given counts as not confident. Silence is not consent here.
+                guard v.confidence == "hoog" else {
+                    result.stillWaiting += 1
+                    continue
+                }
             }
             await decide(v, yes: true)
             // `keur` can still fail or land on "already there"; only what was actually
@@ -151,6 +184,97 @@ final class Core: ObservableObject {
             }
         }
         return result
+    }
+
+    // MARK: the model
+
+    /// Asks the model one made-up question and takes the verdict. Runs at start, when the
+    /// model changes, and after a run in which no answer could be used.
+    func checkModel(notify: Bool = false) async {
+        guard preferences.isConfigured else {
+            modelProblem = nil
+            return
+        }
+        let name = preferences.model
+        let client = ModelClient(endpoint: preferences.endpoint, key: preferences.key, model: name)
+        adopt(await client.check(startingWith: preferences.thinkingOff), for: name, notify: notify)
+    }
+
+    /// Takes a verdict about the model in use, from a check here or a test in Settings. A
+    /// model that only works with thinking switched off gets that switched on: the check just
+    /// showed that it helps.
+    func adopt(_ result: ModelClient.Check, for name: String, notify: Bool = false) {
+        guard name == preferences.model else { return }
+        switch result.health {
+        case .works:
+            modelProblem = nil
+        case .needsThinkingOff:
+            preferences.setThinkingOff(true, for: name)
+            modelProblem = nil
+        default:
+            let text = String(format: t("modelcheck.problem.body"), name, result.sentence)
+            if notify, modelProblem != text, preferences.notificationsOn {
+                Notifier.post(heading: t("modelcheck.problem.title"), text: text)
+            }
+            modelProblem = text
+        }
+    }
+
+    // MARK: parcels
+
+    /// The first parcels of the day go to Parcel without asking -- fifteen by default, which
+    /// leaves five of Parcel's twenty for the button. Only when nothing about it needs you:
+    /// the model was sure, and the carrier is one Parcel knows. Without Parcel a parcel is
+    /// only a reminder, and that follows the general setting.
+    private func mayFileParcelByItself(_ v: Proposal) async -> Bool {
+        guard v.confidence == "hoog" else { return false }
+        await preferences.loadParcelKey()
+        guard preferences.parcelReady else {
+            return preferences.fileAutomatically && v.dueDate != nil
+        }
+        guard ParcelQuota().used() < preferences.parcelPerDay else { return false }
+        let carriers = await ParcelCarriers.shared.all()
+        return ParcelApp.carrier(for: v, among: carriers, region: ParcelApp.macRegion) != nil
+    }
+
+    /// Gives a parcel filed without a day its reminder once Parcel knows the day, and moves a
+    /// reminder along when the carrier changes it. Asks Parcel at most once an hour, and only
+    /// while a parcel is still on its way.
+    func followParcels() async {
+        let month = Date().addingTimeInterval(-30 * 86400)
+        let open = queue.items.filter {
+            $0.category == .parcel && $0.status == .filed && $0.time > month
+            && $0.trackingNumber != nil
+            && ($0.dueDate.map(ParcelFiling.stillAhead) ?? true)
+        }
+        guard !open.isEmpty else { return }
+        if let at = parcelsAskedAt, Date().timeIntervalSince(at) < 3600 { return }
+        await preferences.loadParcelKey()
+        guard preferences.parcelReady, let calendarStore else { return }
+        parcelsAskedAt = Date()
+        await parcel.setConfig(preferences.parcelConfig)
+        await calendarStore.setTarget(calendarTarget)
+        guard let known = try? await parcel.deliveries(maxAge: 0) else { return }
+        let carriers = await ParcelCarriers.shared.all()
+
+        for v in open {
+            guard let d = known.first(where: { ParcelApp.same($0.trackingNumber, v.trackingNumber ?? "") }),
+                  d.statusCode != 0, let day = d.expected, ParcelFiling.stillAhead(day)
+            else { continue }
+            if let reminder = ParcelFiling.reminderId(in: v.itemId) {
+                if let was = v.dueDate, abs(was.timeIntervalSince(day)) < 60 { continue }
+                if (try? await calendarStore.moveReminder(reminder, to: day)) == true {
+                    queue.update(v.id) { $0.dueDate = day }
+                }
+            } else {
+                let name = carriers.first { $0.code == d.carrierCode }?.name ?? v.carrier ?? ""
+                if let id = try? await calendarStore.makeParcelReminder(
+                    title: ParcelFiling.title(v), arriving: day,
+                    note: ParcelFiling.note(v, carrier: name)) {
+                    queue.update(v.id) { $0.dueDate = day; $0.itemId += " reminder:" + id }
+                }
+            }
+        }
     }
 
     // MARK: decisions
@@ -173,6 +297,12 @@ final class Core: ObservableObject {
                 queue.update(v.id) { $0.status = .discarded; $0.error = Proposal.Note.alreadyThere }
             }
         } catch {
+            // Something you can put right -- a carrier to pick, a postcode, a new day -- leaves
+            // it waiting. Failed would leave no button to try again with.
+            if let problem = error as? ParcelApp.Problem, problem.keepsWaiting {
+                statusLine = error.localizedDescription
+                return
+            }
             queue.update(v.id) { $0.status = .failed; $0.error = error.localizedDescription }
             statusLine = error.localizedDescription
         }
@@ -194,6 +324,17 @@ final class Core: ObservableObject {
             await paperless.setSource(Mailbox(account: preferences.account,
                                               mailbox: preferences.mailbox))
             return paperless
+        case .parcel:
+            // Parcel when it is connected, the reminder when the calendar is; either will do.
+            await preferences.loadParcelKey()
+            var app: ParcelApp?
+            if preferences.parcelReady {
+                await parcel.setConfig(preferences.parcelConfig)
+                app = parcel
+            }
+            if let calendarStore { await calendarStore.setTarget(calendarTarget) }
+            guard app != nil || calendarStore != nil else { return nil }
+            return ParcelFiling(parcel: app, calendar: calendarStore)
         case .skipped:
             return nil
         }
@@ -205,6 +346,7 @@ final class Core: ObservableObject {
         switch id {
         case nil, "calendar": return calendarStore
         case "paperless": return preferences.paperlessReady ? paperless : nil
+        case "parcel": return ParcelFiling(parcel: nil, calendar: calendarStore)
         default: return nil
         }
     }

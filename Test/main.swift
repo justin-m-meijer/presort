@@ -16,6 +16,8 @@ let languages = ["en", "nl", "fr", "de"]
 let requiredKeys: [String] = {
     var keys = ["prompt.preamble", "prompt.watch", "prompt.reply", "prompt.closing",
                 "schema.event", "schema.reminder", "shape.event", "shape.reminder",
+                "schema.parcel", "shape.parcel", "parcel.reminder.title", "parcel.reminder.note",
+                "probe.subject", "probe.body",
                 "detector.new.name", "detector.new.instruction"]
     for id in Detector.builtInIds {
         keys += ["detector.\(id).name", "detector.\(id).summary", "detector.\(id).instruction"]
@@ -76,6 +78,10 @@ func run() async {
     expect(b.all.contains { $0.kind == .document }, "there is a document point")
     expect(b.all.first { $0.kind == .document }?.enabled == false,
            "and it is off by default, like every point that needs setting up")
+    let parcelPoint = b.all.first { $0.kind == .parcel }
+    expect(parcelPoint?.enabled == false, "there is a parcel point, and it is off by default too")
+    expect(parcelPoint?.systemText.contains("\"trackingnummer\"") == true,
+           "and it asks for a tracking number")
 
     // --- 4. editing stores only the difference ---
     b.edit("afspraak", instruction: "Only dentist appointments.")
@@ -213,11 +219,115 @@ func run() async {
         // The JSON keys must be identical everywhere: Scanner reads them by name.
         let schemaKeys = ["gevonden", "titel", "begin", "eind", "locatie",
                           "wat", "uiterlijk", "bedrag", "zekerheid",
-                          "datum", "afzender", "trefwoorden"]
+                          "datum", "afzender", "trefwoorden",
+                          "trackingnummer", "vervoerder", "omschrijving", "bezorgdatum"]
         let stray = schemaKeys.filter { !text.contains("\\\"\($0)\\\"") }
         expect(stray.isEmpty, "\(language): schema keeps its keys"
                + (stray.isEmpty ? "" : " -- missing \(stray)"))
     }
+
+    // --- 12. parcels: what may reach Parcel ---
+    // Parcel allows twenty additions a day and counts the refused ones, so everything that
+    // can be decided before a request is decided here, and tested.
+    expect(ParcelApp.normalized("3S abcd-1234 5678") == "3SABCD12345678",
+           "a tracking number is compared without spaces, dashes or case")
+    expect(ParcelApp.plausibleTrackingNumber("3SABCD12345678"), "a real-looking number passes")
+    expect(!ParcelApp.plausibleTrackingNumber("12345"), "a short one does not")
+    expect(!ParcelApp.plausibleTrackingNumber("TRACKINGNUMBER"), "nor a word without a digit")
+    let shippingMail = "Je pakket is onderweg.\nTrack & trace: 3S ABCD 1234 5678\nBestelnummer 998877"
+    expect(ParcelApp.appears("3SABCD12345678", in: shippingMail),
+           "a number broken up for reading is found in the mail")
+    expect(!ParcelApp.appears("3SABCD12345679", in: shippingMail),
+           "a number that is not in the mail is not")
+    // Amazon's numbers keep their dashes in Parcel's own list, so they are sent with them.
+    let amazon = ParcelApp.cleaned(" 304-0537768-9949906 ")
+    expect(amazon == "304-0537768-9949906" && ParcelApp.plausibleTrackingNumber(amazon),
+           "dashes stay in the number that is sent (\(amazon))")
+    expect(ParcelApp.appears(amazon, in: "Bestelnummer 304-0537768-9949906"), "and it is found in the mail")
+    expect(ParcelApp.same("304-0537768-9949906", "30405377689949906"),
+           "with or without dashes it is the same parcel")
+    expect(!ParcelApp.same("", ""), "but two empty numbers are not")
+
+    let carriers = [("tntp", "PostNL", 1), ("tntpit", "PostNL (Deprecated)", 0),
+                    ("tntpitp", "PostNL (International)", 5), ("dhl", "DHL Express", 0),
+                    ("dhlnl", "DHL Netherlands", 0), ("dhluk", "DHL Parcel UK", 0),
+                    ("dpdat", "DPD Austria", 0), ("dpduk", "DPD UK", 0),
+                    ("amzlnl", "Amazon Netherlands", 0), ("amzlde", "Amazon Germany", 0),
+                    ("gls", "GLS", 0), ("ups", "UPS", 0), ("upsmi", "UPS MI", 0)]
+        .map { ParcelApp.Carrier(code: $0.0, name: $0.1, needsExtra: $0.2 != 0) }
+    for (said, code) in [("PostNL", "tntp"), ("postnl pakketten", "tntp"), ("DHL", "dhlnl"),
+                         ("DHL eCommerce", "dhlnl"), ("Amazon", "amzlnl"), ("UPS", "ups"),
+                         ("GLS", "gls")] {
+        expect(ParcelApp.match(said, among: carriers, region: "Netherlands")?.code == code,
+               "‘\(said)’ is matched to \(code)")
+    }
+    expect(ParcelApp.match("DPD", among: carriers, region: "Netherlands") == nil,
+           "‘DPD’ fits several and nothing decides: no guess")
+    expect(ParcelApp.match("", among: carriers, region: "Netherlands") == nil,
+           "no carrier named, none chosen")
+
+    var picked = Proposal(category: .parcel, title: "Headphones",
+                          trackingNumber: "3SABCD12345678", carrier: "DPD")
+    expect(ParcelApp.carrier(for: picked, among: carriers, region: "Netherlands") == nil,
+           "an undecided carrier stays undecided")
+    picked.carrierCode = "dpduk"
+    expect(ParcelApp.carrier(for: picked, among: carriers, region: "Netherlands")?.code == "dpduk",
+           "until one is picked on the card")
+
+    let list = ParcelApp.carriers(from: Data(#"{"tntp":{"name":"PostNL","extra_required":1},"gls":{"name":"GLS"}}"#.utf8))
+    expect(list?.count == 2 && list?.first { $0.code == "tntp" }?.needsExtra == true
+           && list?.first { $0.code == "gls" }?.needsExtra == false,
+           "Parcel's carrier list is read, extra_required included")
+
+    let delivery = ParcelApp.delivery(from: ["tracking_number": "3SABCD12345678", "carrier_code": "tntp",
+                                             "status_code": 2, "date_expected": "2026-09-15 00:00:00"])
+    let parts = delivery?.expected.map { Calendar.current.dateComponents([.day, .hour], from: $0) }
+    expect(delivery?.statusCode == 2 && parts?.day == 15 && parts?.hour == 9,
+           "a delivery day without a time becomes nine in the morning")
+
+    // A counter in a defaults domain of its own, never the real one.
+    let suite = "presort-test-" + UUID().uuidString
+    let defaults = UserDefaults(suiteName: suite)!
+    defer { defaults.removePersistentDomain(forName: suite) }
+    let quota = ParcelQuota(defaults: defaults)
+    let today = Date()
+    expect(quota.used(on: today) == 0, "nothing used on a fresh day")
+    quota.record(on: today)
+    quota.record(on: today)
+    expect(quota.used(on: today) == 2, "every request counts (\(quota.used(on: today)))")
+    expect(quota.used(on: today.addingTimeInterval(86400)) == 0, "and the next day starts again")
+
+    // The new fields are stored under their own names and come back.
+    let parcelQueue = Queue(folder: folder)
+    parcelQueue.add(Proposal(category: .parcel, title: "Headphones", trackingNumber: "3SABCD12345678",
+                             carrier: "PostNL", carrierCode: "tntp"))
+    let reread = Queue(folder: folder).items.last
+    expect(reread?.category == .parcel && reread?.trackingNumber == "3SABCD12345678"
+           && reread?.carrierCode == "tntp", "a parcel and its tracking number survive a reload")
+
+    // --- 13. the model check reads an answer the way the app will ---
+    // Measured against a real server: a thinking model stopped at the token limit with 1,597
+    // characters of reasoning and an empty answer. That is the case this has to recognise.
+    let right = #"{"gevonden": true, "titel": "Dental hygienist", "begin": "2026-10-14T10:30", "eind": "2026-10-14T11:00", "locatie": "Smile Dental", "zekerheid": "hoog"}"#
+    expect(ModelClient.read(right, finish: "stop", reasoning: 0) == .answered,
+           "a correct answer to the probe counts as answered")
+    expect(ModelClient.read("```json\n" + right + "\n```", finish: "stop", reasoning: 0) == .answered,
+           "also inside a code fence")
+    expect(ModelClient.read("", finish: "length", reasoning: 1597) == .ranOutThinking,
+           "an empty answer after thinking to the limit is recognised")
+    expect(ModelClient.read("", finish: "stop", reasoning: 900) == .ranOutThinking,
+           "and so is an empty answer with reasoning beside it")
+    expect(ModelClient.read(#"{"gevonden": false}"#, finish: "stop", reasoning: 0) == .wrong,
+           "the right form with the wrong answer is not good enough")
+    expect(ModelClient.read("Sure! The appointment is on 14 October.", finish: "stop", reasoning: 0)
+           == .noForm("Sure! The appointment is on 14 October."), "prose instead of JSON is caught")
+    let probe = ModelClient.probe()
+    expect(probe.system.contains("\"begin\"") && probe.user.contains("10:30")
+           && probe.user.contains(t("probe.subject")),
+           "the probe asks the appointment question about a made-up message")
+    let check = ModelClient.Check(health: .needsThinkingOff, seconds: 0.3)
+    expect(check.usable && !ModelClient.Check(health: .thinksTooLong, seconds: 5).usable,
+           "working with thinking off counts as usable, thinking too long does not")
 }
 
 await run()

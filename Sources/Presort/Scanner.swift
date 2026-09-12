@@ -26,6 +26,9 @@ final class Scanner: ObservableObject {
         /// Messages where Mail or the model dropped out. Those stay open for the next
         /// run, so they do not count as checked.
         var failed = 0
+        /// The part of `failed` where the model was the problem, rather than Mail. When every
+        /// message failed on the model, `Core` checks the model and says so.
+        var modelFailed = 0
         var titles: [String] = []
         /// The proposals from this run, so the caller can handle them without guessing
         /// which ones are new.
@@ -54,9 +57,7 @@ final class Scanner: ObservableObject {
         defer { busy = false }
 
         let mailbox = Mailbox(account: preferences.account, mailbox: preferences.mailbox)
-        let client = ModelClient(endpoint: preferences.endpoint,
-                                 key: preferences.key,
-                                 model: preferences.model)
+        let client = preferences.modelClient
 
         progress(String(format: t("scan.fetching"), preferences.mailbox))
 
@@ -145,16 +146,19 @@ final class Scanner: ObservableObject {
                     case .event:    proposal = makeEventProposal(o, b, point)
                     case .reminder: proposal = makeTaskProposal(o, b, point)
                     case .document: proposal = makeDocumentProposal(o, b, point, attachments)
+                    case .parcel:   proposal = makeParcelProposal(o, b, point, text)
                     }
                     if proposal != nil { break }
                 }
             } catch {
                 outcome.failed += 1
+                outcome.modelFailed += 1
                 continue
             }
 
             guard understood else {
                 outcome.failed += 1
+                outcome.modelFailed += 1
                 continue
             }
 
@@ -261,6 +265,33 @@ final class Scanner: ObservableObject {
                         messageId: b.id, attachmentIndex: file.index,
                         attachmentName: file.name, keywords: Array(keywords),
                         correspondent: from.isEmpty ? nil : String(from.prefix(80)))
+    }
+
+    /// A parcel on its way. The tracking number has to be in the mail itself -- the one thing
+    /// a model cannot invent into being -- and a parcel already in the queue is not proposed
+    /// again: the shop and the carrier both write about the same one.
+    private func makeParcelProposal(_ o: [String: Any], _ b: Mailbox.Message,
+                                    _ point: Detector, _ text: String) -> Proposal? {
+        guard (o["gevonden"] as? Bool) == true, confidentEnough(o) else { return nil }
+        let number = ParcelApp.cleaned(o["trackingnummer"] as? String ?? "")
+        guard ParcelApp.plausibleTrackingNumber(number),
+              ParcelApp.appears(number, in: b.subject + "\n" + text) else { return nil }
+        guard !queue.items.contains(where: {
+            ParcelApp.same($0.trackingNumber ?? "", number) && $0.status != .failed
+        }) else { return nil }
+
+        var what = (o["omschrijving"] as? String ?? "").trimmingCharacters(in: .whitespaces)
+        if what.count < 2 { what = b.subject }
+        let carrier = (o["vervoerder"] as? String ?? "").trimmingCharacters(in: .whitespaces)
+        // Only a day the mail itself gives, and not one already behind us.
+        let arriving = Dates.read(o["bezorgdatum"] as? String).flatMap {
+            Dates.plausible($0) && ($0 > Date() || Calendar.current.isDateInToday($0)) ? $0 : nil
+        }
+        return Proposal(category: .parcel, sender: b.sender, subject: b.subject,
+                        title: String(what.prefix(100)), dueDate: arriving, note: note(b),
+                        detector: point.name, confidence: confidence(o), messageId: b.id,
+                        trackingNumber: number,
+                        carrier: carrier.isEmpty ? nil : String(carrier.prefix(60)))
     }
 
     private func note(_ b: Mailbox.Message) -> String {

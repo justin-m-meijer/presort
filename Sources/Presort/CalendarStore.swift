@@ -155,6 +155,40 @@ actor CalendarStore {
         return r.calendarItemIdentifier
     }
 
+    /// A reminder for the day a parcel arrives, with the alert on that moment itself. No lead
+    /// time: a delivery is not a deadline, and a nudge three days early would only be noise.
+    func makeParcelReminder(title: String, arriving: Date, note: String) throws -> String {
+        store.reset()
+        let r = EKReminder(eventStore: store)
+        r.title = title
+        r.notes = note
+        r.calendar = try reminderList()
+        schedule(r, at: arriving)
+        do { try store.save(r, commit: true) }
+        catch { throw Problem.saveFailed(error.localizedDescription) }
+        return r.calendarItemIdentifier
+    }
+
+    /// Moves a parcel's reminder when the carrier moves the day. False when the reminder is
+    /// gone or already ticked off; those are left as they are.
+    func moveReminder(_ id: String, to arriving: Date) throws -> Bool {
+        store.reset()
+        guard let r = store.calendarItem(withIdentifier: id) as? EKReminder, !r.isCompleted else {
+            return false
+        }
+        for alarm in r.alarms ?? [] { r.removeAlarm(alarm) }
+        schedule(r, at: arriving)
+        do { try store.save(r, commit: true) }
+        catch { throw Problem.saveFailed(error.localizedDescription) }
+        return true
+    }
+
+    private func schedule(_ r: EKReminder, at moment: Date) {
+        r.dueDateComponents = Calendar.current.dateComponents(
+            [.year, .month, .day, .hour, .minute], from: moment)
+        if moment > Date() { r.addAlarm(EKAlarm(absoluteDate: moment)) }
+    }
+
     /// Does something with this title already exist around this time? Guards against
     /// duplicate work if the saved state is ever lost.
     func hasEvent(title: String, start: Date) -> Bool {

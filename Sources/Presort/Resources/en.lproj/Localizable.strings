@@ -261,7 +261,7 @@
 "paperless.token" = "API token";
 "paperless.tags" = "Tags to add (comma separated)";
 "paperless.createCorrespondent" = "Create a correspondent if the sender is unknown";
-"paperless.check" = "Test the connection";
+"connection.check" = "Test the connection";
 "paperless.check.ok" = "Connected. %1$d documents, %2$d tags.";
 "paperless.note" = "Attachments worth keeping are uploaded with what the mail already says about them: title, sender and date. Only tags that already exist are applied — nothing new is created in your archive. The token is kept in the Keychain, not in the settings file.";
 "paperless.error.notConfigured" = "No token filled in yet.";
@@ -303,3 +303,68 @@
 "outcome.reminder" = "reminder in your list";
 "outcome.document" = "document in Paperless";
 "skip.nothingRelevant" = "No relevant actions to process";
+
+/* Parcels: the fourth shape, and Parcel as the place to send one. */
+
+"shape.parcel" = "Parcel to track";
+"schema.parcel" = "{\"gevonden\": true|false, \"trackingnummer\": \"exactly as it is in the text\",\n \"vervoerder\": \"the company delivering it, or empty\", \"omschrijving\": \"what is coming, in a few words, in English\",\n \"bezorgdatum\": \"YYYY-MM-DD or empty\", \"zekerheid\": \"hoog|midden|laag\"}";
+"detector.pakket.name" = "Parcels on their way";
+"detector.pakket.summary" = "A shipping notice with a tracking number";
+"detector.pakket.instruction" = "A parcel on its way to the recipient, with a TRACKING NUMBER in the text: a shipping confirmation from a shop, or a notice from the carrier delivering it.\n\nPut in \"trackingnummer\" the tracking number exactly as it appears in the text. An order number, customer number or invoice number is NOT a tracking number; if the text has only those, answer false.\n\nPut in \"vervoerder\" the company that delivers the parcel, as the text names it — not the shop. Leave it empty if the text does not say.\n\nPut in \"omschrijving\" what is coming, in a few words, or the name of the shop if the text does not say what. Describe this parcel; never copy an example from these instructions.\n\nPut in \"bezorgdatum\" the day the text says the parcel is expected, otherwise leave it empty. Do not work it out yourself.\n\nNOT this: a parcel already delivered, something waiting at a pick-up point, a return label, or advertising.";
+"badge.parcel" = "Parcel";
+"card.intoParcel" = "GOES INTO PARCEL";
+"card.tracking" = "Tracking";
+"card.carrier" = "Carrier";
+"card.carrierPick" = "choose — the mail says ‘%@’";
+"card.carrierPickNone" = "choose — the mail does not say";
+"card.arrives" = "Arrives";
+"card.arrivesUnknown" = "not in the mail";
+"card.parcelReminder" = "A reminder with the tracking number goes into your list for that day.";
+"card.parcelNoDay" = "The reminder follows once Parcel knows which day it arrives.";
+"card.parcelNothing" = "The mail gives no day and Parcel is not connected, so there is nothing to file yet.";
+"card.parcelQuota" = "%1$d of Parcel’s %2$d additions used today.";
+"outcome.parcel" = "in Parcel";
+"outcome.parcelAndReminder" = "in Parcel, with a reminder";
+"parcel.name" = "Parcel";
+"parcel.enable" = "Send parcels to Parcel";
+"parcel.key" = "API key";
+"parcel.postcode" = "Your postcode";
+"parcel.push" = "Let Parcel notify me when one is added";
+"parcel.perDay" = "The first %d a day go in by themselves";
+"parcel.perDay.none" = "None go in by themselves";
+"parcel.note" = "Parcel allows 20 additions a day, refused ones included, and only with Premium. Presort counts them and stops before Parcel does; the ones that go in by themselves leave the rest of the day for you. The tracking number has to be in the mail, and a parcel Parcel already tracks is not added again. Your postcode is only sent to carriers that need it, such as PostNL. Parcel offers no way to remove a delivery, so this cannot be undone. The key is kept in the Keychain.";
+"parcel.check.ok" = "Connected. Parcel is tracking %1$d; %2$d of %3$d additions used today.";
+"parcel.error.notConfigured" = "No API key filled in yet.";
+"parcel.error.http" = "Parcel answered with code %1$d. %2$@";
+"parcel.error.rejected" = "Parcel did not accept it: %@";
+"parcel.error.noTrackingNumber" = "There is no tracking number to send.";
+"parcel.error.noCarrier" = "Choose the carrier on the card first.";
+"parcel.error.needsPostcode" = "%1$@ needs your postcode. Fill it in under %2$@.";
+"parcel.error.dailyLimit" = "Parcel’s %d additions for today are used up. It keeps waiting until tomorrow.";
+"parcel.error.nothingToDo" = "The mail gives no day and Parcel is not connected.";
+"parcel.reminder.title" = "Parcel arrives: %@";
+"parcel.reminder.note" = "Tracking number: %1$@\nCarrier: %2$@\nFrom: %3$@\nSubject: %4$@";
+
+/* Checking the model. */
+
+"probe.subject" = "Your appointment is confirmed";
+"probe.body" = "Hello, your appointment with the dental hygienist is confirmed for 14 October at 10:30, at Smile Dental, High Street 1. Please arrive ten minutes early.";
+"model.error.ranOut" = "The model used its whole answer thinking and gave no text. Test the model under Settings › Model.";
+"model.thinkingOff" = "Switch off thinking for this model";
+"model.thinkingOffNote" = "Some models think before they answer and can use up the whole answer doing it. This asks the server to skip that step. Not every server accepts the request, so the test only switches it on when it helps.";
+"modelcheck.works" = "Works. Answered in %.1f s.";
+"modelcheck.worksWithoutThinking" = "Works with thinking switched off. Answered in %.1f s.";
+"modelcheck.thinksTooLong" = "Spends its whole answer thinking and never gets to the answer, also when asked to skip that. Choose a model without a thinking step.";
+"modelcheck.noForm" = "Answers, but not in the form the app needs: ‘%@’";
+"modelcheck.wrong" = "Answers in the right form, but got an easy example wrong.";
+"modelcheck.unreachable" = "Could not be asked: %@";
+"modelcheck.problem.title" = "The model is not giving usable answers";
+"modelcheck.problem.body" = "%1$@: %2$@";
+"modelcheck.openSettings" = "Choose another model";
+"modelcheck.testOne" = "Test this model";
+"modelcheck.testAll" = "Test all models";
+"modelcheck.progress" = "Testing %1$d of %2$d…";
+"modelcheck.skipped" = "Not a chat model; skipped.";
+"modelcheck.use" = "Use";
+"modelcheck.inUse" = "in use";
+"modelcheck.note" = "A test sends one short, made-up message — never your mail — and checks what comes back. A hosted model may charge a little for it.";

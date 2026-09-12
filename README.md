@@ -40,12 +40,12 @@ read so it can spot a duplicate, and left alone. There is a switch to point it a
 you already use, with the reason not to next to it.
 
 Everything the app does happens on your Mac, with one exception you have to turn on
-yourself: a **connection** to a service elsewhere. Paperless-ngx is the first, and it is
-what a found document is handed to.
+yourself: a **connection** to a service elsewhere. Paperless-ngx takes a found document;
+[Parcel](https://parcelapp.net) takes a tracking number.
 
 ## What it looks for
 
-Seven built-in categories, each a switch you can turn off, each with a description you can
+Eight built-in categories, each a switch you can turn off, each with a description you can
 rewrite in your own words:
 
 | | | lands in |
@@ -55,6 +55,7 @@ rewrite in your own words:
 | Invoices and payments | with the amount and the due date | reminders |
 | Renewals and expiries | subscriptions, insurance, documents | reminders |
 | Parcels to collect | waiting at a pick-up point | reminders |
+| Parcels on their way | a shipping notice with a tracking number | Parcel, and a reminder on the day |
 | Travel and tickets | flights, trains, hotels, performances | calendar |
 | Documents worth keeping | an attached invoice, statement, policy or ticket | Paperless-ngx |
 
@@ -62,6 +63,16 @@ A document only gets asked about when the message actually carries an attachment
 goes to Paperless with what the mail already says about it: the sender as correspondent,
 the date printed on it, and a title. Tags are matched against ones that already exist in
 your archive; none are invented.
+
+A parcel is only proposed when its tracking number appears in the mail itself, and only
+once, however many mails the shop and the carrier send about it. The carrier is matched
+against Parcel's own list; when a mail just says "DPD" and that fits several, the card asks
+which one. Parcel allows twenty additions a day through its API, refused ones included, and
+only with Premium, so the app keeps count as well. The first fifteen a day go in by
+themselves (you can change the number), which leaves the rest for the button. On the day a
+parcel is expected, a reminder comes up with the tracking number in it; when the mail gives
+no day, the reminder follows once Parcel knows. Parcel has no way to remove a delivery, so
+this is the one thing the app files that cannot be undone.
 
 You can add your own. What you **cannot** change is the JSON schema wrapped around your
 description, because the validation above depends on its shape. The app shows you those
@@ -113,6 +124,13 @@ are required: without them there is nothing to read and nowhere to write.
 Everything lives in Settings, nothing in the source. Point it at your model (address,
 model name, optional key), tell it which Mail account and mailbox to read, and choose how
 far back to look. Nothing is scanned twice.
+
+Settings › Model can test the model you chose, or every model the endpoint lists. Each gets
+one short, made-up message, never your mail, and the answer is checked the way a real one
+would be. A model that spends its whole answer thinking is caught there; when the server
+lets thinking be switched off per request, the test does that for you. The same check runs
+when the app starts, when you change the model, and after a run in which no answer could be
+used, and the main window says so when the model is not up to the work.
 
 ## Languages
 

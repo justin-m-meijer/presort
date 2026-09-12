@@ -258,7 +258,7 @@
 "paperless.token" = "API-Token";
 "paperless.tags" = "Schlagwörter zum Hinzufügen (durch Komma getrennt)";
 "paperless.createCorrespondent" = "Korrespondenten anlegen, wenn der Absender unbekannt ist";
-"paperless.check" = "Verbindung testen";
+"connection.check" = "Verbindung testen";
 "paperless.check.ok" = "Verbunden. %1$d Dokumente, %2$d Schlagwörter.";
 "paperless.note" = "Anhänge, die es wert sind, werden mit dem hochgeladen, was die E-Mail schon über sie sagt: Titel, Absender und Datum. Es werden nur bereits vorhandene Schlagwörter gesetzt — in deinem Archiv entsteht nichts Neues. Das Token liegt im Schlüsselbund, nicht in der Einstellungsdatei.";
 "paperless.error.notConfigured" = "Noch kein Token eingetragen.";
@@ -300,3 +300,68 @@
 "outcome.reminder" = "Erinnerung in deiner Liste";
 "outcome.document" = "Dokument in Paperless";
 "skip.nothingRelevant" = "Keine relevanten Aktionen zu verarbeiten";
+
+/* Pakete: die vierte Form, und Parcel als Ort, an den sie gehen. */
+
+"shape.parcel" = "Paket zum Verfolgen";
+"schema.parcel" = "{\"gevonden\": true|false, \"trackingnummer\": \"genau so, wie sie im Text steht\",\n \"vervoerder\": \"das Unternehmen, das es zustellt, oder leer\", \"omschrijving\": \"was kommt, in wenigen Worten, auf Deutsch\",\n \"bezorgdatum\": \"JJJJ-MM-TT oder leer\", \"zekerheid\": \"hoog|midden|laag\"}";
+"detector.pakket.name" = "Pakete unterwegs";
+"detector.pakket.summary" = "Eine Versandmitteilung mit Sendungsnummer";
+"detector.pakket.instruction" = "Ein Paket, das zum Empfänger unterwegs ist, mit einer SENDUNGSNUMMER im Text: eine Versandbestätigung eines Shops oder eine Mitteilung des Zustellers.\n\nTrage in \"trackingnummer\" die Sendungsnummer genau so ein, wie sie im Text steht. Eine Bestell-, Kunden- oder Rechnungsnummer ist KEINE Sendungsnummer; stehen nur solche im Text, antworte false.\n\nTrage in \"vervoerder\" das Unternehmen ein, das das Paket zustellt, so wie der Text es nennt — nicht den Shop. Leer lassen, wenn der Text es nicht sagt.\n\nTrage in \"omschrijving\" in wenigen Worten ein, was kommt, oder den Namen des Shops, wenn der Text nicht sagt, was. Beschreibe dieses Paket; übernimm nie ein Beispiel aus dieser Anleitung.\n\nTrage in \"bezorgdatum\" den Tag ein, an dem das Paket laut Text erwartet wird, sonst leer. Rechne ihn nicht selbst aus.\n\nNicht dies: ein bereits zugestelltes Paket, etwas, das an einer Abholstelle bereitliegt, ein Retourenetikett oder Werbung.";
+"badge.parcel" = "Paket";
+"card.intoParcel" = "GEHT AN PARCEL";
+"card.tracking" = "Sendung";
+"card.carrier" = "Zusteller";
+"card.carrierPick" = "wählen — die E-Mail sagt „%@“";
+"card.carrierPickNone" = "wählen — die E-Mail sagt es nicht";
+"card.arrives" = "Kommt";
+"card.arrivesUnknown" = "steht nicht in der E-Mail";
+"card.parcelReminder" = "Für diesen Tag kommt eine Erinnerung mit der Sendungsnummer in deine Liste.";
+"card.parcelNoDay" = "Die Erinnerung folgt, sobald Parcel den Zustelltag kennt.";
+"card.parcelNothing" = "Die E-Mail nennt keinen Tag und Parcel ist nicht verbunden, es gibt also noch nichts einzutragen.";
+"card.parcelQuota" = "Heute %1$d von %2$d Parcel-Hinzufügungen verbraucht.";
+"outcome.parcel" = "in Parcel";
+"outcome.parcelAndReminder" = "in Parcel, mit Erinnerung";
+"parcel.name" = "Parcel";
+"parcel.enable" = "Pakete an Parcel senden";
+"parcel.key" = "API-Schlüssel";
+"parcel.postcode" = "Deine Postleitzahl";
+"parcel.push" = "Parcel eine Mitteilung schicken lassen, wenn eines dazukommt";
+"parcel.perDay" = "Die ersten %d am Tag gehen von selbst hinein";
+"parcel.perDay.none" = "Keines geht von selbst hinein";
+"parcel.note" = "Parcel erlaubt 20 Hinzufügungen am Tag, abgelehnte mitgezählt, und nur mit Premium. Presort zählt mit und hört auf, bevor Parcel es tut; was von selbst hineingeht, lässt dir den Rest des Tages. Die Sendungsnummer muss in der E-Mail stehen, und ein Paket, das Parcel schon verfolgt, wird nicht noch einmal hinzugefügt. Deine Postleitzahl geht nur an Zusteller, die sie brauchen, etwa PostNL. Parcel bietet keine Möglichkeit, eine Lieferung zu entfernen, deshalb lässt sich das nicht rückgängig machen. Der Schlüssel liegt im Schlüsselbund.";
+"parcel.check.ok" = "Verbunden. Parcel verfolgt %1$d; heute %2$d von %3$d Hinzufügungen verbraucht.";
+"parcel.error.notConfigured" = "Noch kein API-Schlüssel eingetragen.";
+"parcel.error.http" = "Parcel hat mit Code %1$d geantwortet. %2$@";
+"parcel.error.rejected" = "Parcel hat es nicht angenommen: %@";
+"parcel.error.noTrackingNumber" = "Es gibt keine Sendungsnummer zum Senden.";
+"parcel.error.noCarrier" = "Wähle zuerst den Zusteller auf der Karte.";
+"parcel.error.needsPostcode" = "%1$@ braucht deine Postleitzahl. Trage sie unter %2$@ ein.";
+"parcel.error.dailyLimit" = "Die %d Parcel-Hinzufügungen für heute sind verbraucht. Es wartet bis morgen.";
+"parcel.error.nothingToDo" = "Die E-Mail nennt keinen Tag und Parcel ist nicht verbunden.";
+"parcel.reminder.title" = "Paket kommt: %@";
+"parcel.reminder.note" = "Sendungsnummer: %1$@\nZusteller: %2$@\nVon: %3$@\nBetreff: %4$@";
+
+/* Das Modell testen. */
+
+"probe.subject" = "Dein Termin ist bestätigt";
+"probe.body" = "Hallo, dein Termin bei der Dentalhygienikerin ist für den 14. Oktober um 10:30 bestätigt, Zahnarztpraxis Smile, Hauptstraße 1. Bitte komm zehn Minuten früher.";
+"model.error.ranOut" = "Das Modell hat seine ganze Antwort mit Nachdenken verbraucht und keinen Text geliefert. Teste das Modell in den Einstellungen.";
+"model.thinkingOff" = "Nachdenken für dieses Modell ausschalten";
+"model.thinkingOffNote" = "Manche Modelle denken vor der Antwort nach und können dabei die ganze Antwort aufbrauchen. Dies bittet den Server, diesen Schritt auszulassen. Nicht jeder Server akzeptiert das, deshalb schaltet der Test es nur ein, wenn es hilft.";
+"modelcheck.works" = "Funktioniert. Antwort in %.1f s.";
+"modelcheck.worksWithoutThinking" = "Funktioniert mit ausgeschaltetem Nachdenken. Antwort in %.1f s.";
+"modelcheck.thinksTooLong" = "Verbraucht die ganze Antwort mit Nachdenken und kommt nie zur Antwort, auch wenn es gebeten wird, das auszulassen. Wähle ein Modell ohne Denkschritt.";
+"modelcheck.noForm" = "Antwortet, aber nicht in der Form, die die App braucht: „%@“";
+"modelcheck.wrong" = "Antwortet in der richtigen Form, lag aber bei einem einfachen Beispiel falsch.";
+"modelcheck.unreachable" = "Konnte nicht gefragt werden: %@";
+"modelcheck.problem.title" = "Das Modell gibt keine brauchbaren Antworten";
+"modelcheck.problem.body" = "%1$@: %2$@";
+"modelcheck.openSettings" = "Anderes Modell wählen";
+"modelcheck.testOne" = "Dieses Modell testen";
+"modelcheck.testAll" = "Alle Modelle testen";
+"modelcheck.progress" = "Teste %1$d von %2$d…";
+"modelcheck.skipped" = "Kein Chatmodell; übersprungen.";
+"modelcheck.use" = "Verwenden";
+"modelcheck.inUse" = "in Verwendung";
+"modelcheck.note" = "Ein Test schickt eine kurze, erfundene Nachricht — nie deine E-Mail — und prüft, was zurückkommt. Ein gehostetes Modell kann dafür einen kleinen Betrag berechnen.";

@@ -258,7 +258,7 @@
 "paperless.token" = "API-token";
 "paperless.tags" = "Tags om toe te voegen (komma’s ertussen)";
 "paperless.createCorrespondent" = "Correspondent aanmaken als de afzender onbekend is";
-"paperless.check" = "Verbinding testen";
+"connection.check" = "Verbinding testen";
 "paperless.check.ok" = "Verbonden. %1$d documenten, %2$d tags.";
 "paperless.note" = "Bijlagen die het bewaren waard zijn gaan erheen met wat de mail er al over zegt: titel, afzender en datum. Alleen tags die al bestaan worden toegepast — er wordt niets nieuws in je archief aangemaakt. De token staat in de sleutelhanger, niet in het instellingenbestand.";
 "paperless.error.notConfigured" = "Nog geen token ingevuld.";
@@ -300,3 +300,68 @@
 "outcome.reminder" = "herinnering in je lijst";
 "outcome.document" = "document in Paperless";
 "skip.nothingRelevant" = "Geen relevante acties te verwerken";
+
+/* Pakketten: de vierde vorm, en Parcel als plek om ze heen te sturen. */
+
+"shape.parcel" = "Pakket om te volgen";
+"schema.parcel" = "{\"gevonden\": true|false, \"trackingnummer\": \"precies zoals het in de tekst staat\",\n \"vervoerder\": \"het bedrijf dat het bezorgt, of leeg\", \"omschrijving\": \"wat er komt, in een paar woorden, in het Nederlands\",\n \"bezorgdatum\": \"JJJJ-MM-DD of leeg\", \"zekerheid\": \"hoog|midden|laag\"}";
+"detector.pakket.name" = "Pakketten onderweg";
+"detector.pakket.summary" = "Een verzendbericht met een trackingnummer";
+"detector.pakket.instruction" = "Een pakket dat onderweg is naar de ontvanger, met een TRACKINGNUMMER in de tekst: een verzendbevestiging van een winkel, of een bericht van de vervoerder die het bezorgt.\n\nZet in \"trackingnummer\" het trackingnummer precies zoals het in de tekst staat. Een ordernummer, klantnummer of factuurnummer is GEEN trackingnummer; staan alleen die erin, antwoord dan false.\n\nZet in \"vervoerder\" het bedrijf dat het pakket bezorgt, zoals de tekst het noemt — niet de winkel. Laat het leeg als de tekst het niet zegt.\n\nZet in \"omschrijving\" in een paar woorden wat er komt, of de naam van de winkel als de tekst niet zegt wat. Beschrijf dit pakket; neem nooit een voorbeeld uit deze uitleg over.\n\nZet in \"bezorgdatum\" de dag waarop het pakket volgens de tekst verwacht wordt, anders leeg. Niet zelf uitrekenen.\n\nNIET dit: een pakket dat al bezorgd is, iets dat klaarligt bij een afhaalpunt, een retourlabel, of reclame.";
+"badge.parcel" = "Pakket";
+"card.intoParcel" = "GAAT NAAR PARCEL";
+"card.tracking" = "Tracking";
+"card.carrier" = "Vervoerder";
+"card.carrierPick" = "kies — de mail zegt ‘%@’";
+"card.carrierPickNone" = "kies — de mail zegt het niet";
+"card.arrives" = "Komt";
+"card.arrivesUnknown" = "staat niet in de mail";
+"card.parcelReminder" = "Er komt een herinnering met het trackingnummer in je lijst op die dag.";
+"card.parcelNoDay" = "De herinnering volgt zodra Parcel weet op welke dag het komt.";
+"card.parcelNothing" = "De mail noemt geen dag en Parcel is niet gekoppeld, dus er valt nog niets weg te zetten.";
+"card.parcelQuota" = "Vandaag %1$d van de %2$d toevoegingen bij Parcel gebruikt.";
+"outcome.parcel" = "in Parcel";
+"outcome.parcelAndReminder" = "in Parcel, met herinnering";
+"parcel.name" = "Parcel";
+"parcel.enable" = "Pakketten naar Parcel sturen";
+"parcel.key" = "API-sleutel";
+"parcel.postcode" = "Je postcode";
+"parcel.push" = "Laat Parcel een melding sturen als er een bij komt";
+"parcel.perDay" = "De eerste %d per dag gaan er vanzelf in";
+"parcel.perDay.none" = "Er gaat er geen vanzelf in";
+"parcel.note" = "Parcel staat 20 toevoegingen per dag toe, geweigerde meegeteld, en alleen met Premium. Presort telt ze en stopt voordat Parcel dat doet; wat er vanzelf in gaat, laat de rest van de dag voor jou over. Het trackingnummer moet in de mail staan, en een pakket dat Parcel al volgt wordt niet nog eens toegevoegd. Je postcode gaat alleen naar vervoerders die hem nodig hebben, zoals PostNL. Parcel kan een levering niet verwijderen, dus dit is niet terug te draaien. De sleutel staat in de sleutelhanger.";
+"parcel.check.ok" = "Verbonden. Parcel volgt er %1$d; vandaag %2$d van de %3$d toevoegingen gebruikt.";
+"parcel.error.notConfigured" = "Nog geen API-sleutel ingevuld.";
+"parcel.error.http" = "Parcel antwoordde met code %1$d. %2$@";
+"parcel.error.rejected" = "Parcel nam het niet aan: %@";
+"parcel.error.noTrackingNumber" = "Er is geen trackingnummer om te sturen.";
+"parcel.error.noCarrier" = "Kies eerst de vervoerder op de kaart.";
+"parcel.error.needsPostcode" = "%1$@ heeft je postcode nodig. Vul die in bij %2$@.";
+"parcel.error.dailyLimit" = "De %d toevoegingen bij Parcel zijn voor vandaag op. Het blijft wachten tot morgen.";
+"parcel.error.nothingToDo" = "De mail noemt geen dag en Parcel is niet gekoppeld.";
+"parcel.reminder.title" = "Pakket komt: %@";
+"parcel.reminder.note" = "Trackingnummer: %1$@\nVervoerder: %2$@\nVan: %3$@\nOnderwerp: %4$@";
+
+/* Het model testen. */
+
+"probe.subject" = "Je afspraak is bevestigd";
+"probe.body" = "Hallo, je afspraak bij de mondhygiënist is bevestigd voor 14 oktober om 10:30, bij Tandartspraktijk Smile, Hoofdstraat 1. Kom tien minuten van tevoren.";
+"model.error.ranOut" = "Het model gebruikte zijn hele antwoord om na te denken en gaf geen tekst. Test het model bij Instellingen › Model.";
+"model.thinkingOff" = "Denken uitzetten voor dit model";
+"model.thinkingOffNote" = "Sommige modellen denken eerst na en kunnen daar hun hele antwoord aan opmaken. Dit vraagt de server die stap over te slaan. Niet elke server accepteert dat, dus de test zet het alleen aan als het helpt.";
+"modelcheck.works" = "Werkt. Antwoord in %.1f s.";
+"modelcheck.worksWithoutThinking" = "Werkt met denken uit. Antwoord in %.1f s.";
+"modelcheck.thinksTooLong" = "Gebruikt zijn hele antwoord om na te denken en komt niet aan het antwoord toe, ook niet als hem gevraagd wordt dat over te slaan. Kies een model zonder denkstap.";
+"modelcheck.noForm" = "Antwoordt, maar niet in de vorm die de app nodig heeft: ‘%@’";
+"modelcheck.wrong" = "Antwoordt in de goede vorm, maar had een eenvoudig voorbeeld fout.";
+"modelcheck.unreachable" = "Kon niet bevraagd worden: %@";
+"modelcheck.problem.title" = "Het model geeft geen bruikbare antwoorden";
+"modelcheck.problem.body" = "%1$@: %2$@";
+"modelcheck.openSettings" = "Kies een ander model";
+"modelcheck.testOne" = "Dit model testen";
+"modelcheck.testAll" = "Alle modellen testen";
+"modelcheck.progress" = "Bezig met %1$d van %2$d…";
+"modelcheck.skipped" = "Geen chatmodel; overgeslagen.";
+"modelcheck.use" = "Gebruiken";
+"modelcheck.inUse" = "in gebruik";
+"modelcheck.note" = "Een test stuurt één kort, verzonnen bericht — nooit je post — en kijkt wat er terugkomt. Een model bij een externe dienst kan daar een klein bedrag voor rekenen.";
