@@ -144,6 +144,10 @@ reminders, not translated ones.
 
 The source, its comments and everything on GitHub are in English.
 
+## Support
+
+If this is useful to you, you can support my work with a [donation through PayPal](https://www.paypal.com/donate?hosted_button_id=UNBDNLN8MSC88).
+
 ## Licence
 
 Licensed under the [Mozilla Public License 2.0](LICENSE). You may use, change and share it, also
