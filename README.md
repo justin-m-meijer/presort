@@ -146,8 +146,6 @@ The source, its comments and everything on GitHub are in English.
 
 ## Licence
 
-[PolyForm Noncommercial 1.0.0](LICENSE.md).
-
-Use it, change it, fork it and share it for any noncommercial purpose: personal use, study,
-hobby projects, and use by charities, schools and public institutions. Selling it, or using
-it as part of something you sell, is not covered. If that is what you want, ask.
+Licensed under the [Mozilla Public License 2.0](LICENSE). You may use, change and share it, also
+commercially. If you distribute a changed version of these files, those files must stay under the
+MPL 2.0 and their source must be available.
