@@ -33,6 +33,26 @@ user  ─┬─ in the app: Help menu / Settings / options page ──┐
 - **Issue text is treated as untrusted input** in every prompt, and the tool allowlists are narrow: triage can only
   read, comment and label; implementation can build, test, commit, push a branch and open a PR.
 
+## The content lane: no approval, automatic merge and build
+
+Issues labelled `content` (texts, copy, translations, documentation) skip the approval step. The label can be set
+by the maintainer, or by a trusted import such as the Folio source in the daily digest; the public support form
+cannot set it, and the workflow refuses the lane for anything carrying `from-intake`. Claude implements the change
+and opens the PR as usual; a second step then merges it with the Claude App token, so the push to the default
+branch starts the repository's own build workflow (ZoomCheck: `build.yml`; Mijn Straat: `ci.yml`; the App Store
+apps have no CI build, so "a new build" there still means Xcode on the Mac). If Claude finds the change goes beyond
+content, it labels the PR `needs-review` and the merge step leaves it alone and says so on the issue.
+
+## Staying informed
+
+- Every issue created through the support form triggers one ntfy push (`NTFY_URL` in `secrets/support.env`).
+- `truenas/support-digest.py` runs daily on TrueNAS and sends one ntfy message: new issues, PRs Claude is working
+  on, what was merged, and what is waiting for your `approved`. Silent when nothing happened.
+- The digest also imports issues from other sources. **Folio is prepared but not connected:** `source_folio()` in
+  that script needs to know how Folio exposes its content issues (API endpoint and token, an export file, a shared
+  folder). Until then the daily check covers GitHub only.
+- GitHub's own notifications (watching your repositories) keep working alongside.
+
 ## What is in each app repository
 
 | File | Does |
