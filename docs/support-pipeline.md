@@ -48,9 +48,11 @@ content, it labels the PR `needs-review` and the merge step leaves it alone and 
 - Every issue created through the support form triggers one ntfy push (`NTFY_URL` in `secrets/support.env`).
 - `truenas/support-digest.py` runs daily on TrueNAS and sends one ntfy message: new issues, PRs Claude is working
   on, what was merged, and what is waiting for your `approved`. Silent when nothing happened.
-- The digest also imports issues from other sources. **Folio is prepared but not connected:** `source_folio()` in
-  that script needs to know how Folio exposes its content issues (API endpoint and token, an export file, a shared
-  folder). Until then the daily check covers GitHub only.
+- The digest also imports the **Folio News problem reports**: the app's "Report a Problem" writes `ProblemReport`
+  records to its public CloudKit database, and `truenas/cloudkit_reports.py` reads them with a server-to-server key.
+  Rendering problems (layout, pictures, incomplete) become `content` issues and go through the content lane; "something
+  else" becomes a bug that waits for `approved`. Set-up and the trade-off are in `stacks/support/README.md` of the
+  homelab repository. Folio News runs its workflows on the `xcode-27` image because the app needs the iOS 27 SDK.
 - GitHub's own notifications (watching your repositories) keep working alongside.
 
 ## What is in each app repository
