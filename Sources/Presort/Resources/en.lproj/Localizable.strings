@@ -247,6 +247,7 @@
 "welcome.lane.calendar" = "Calendar";
 "welcome.lane.reminders" = "Reminders";
 "welcome.menuItem" = "Welcome to Presort";
+"support.menuItem" = "Report a Problem or Ask a Question…";
 
 /* Filing outcomes. */
 

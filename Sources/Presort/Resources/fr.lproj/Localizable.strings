@@ -244,6 +244,7 @@
 "welcome.lane.calendar" = "Calendrier";
 "welcome.lane.reminders" = "Rappels";
 "welcome.menuItem" = "Bienvenue dans Presort";
+"support.menuItem" = "Signaler un problème ou poser une question…";
 
 /* Filing outcomes. */
 

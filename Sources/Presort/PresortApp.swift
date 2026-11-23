@@ -52,7 +52,28 @@ struct HelpCommands: Commands {
                 openWindow(id: Windows.main)
                 core.showWelcome = true
             }
+            Divider()
+            Button(t("support.menuItem")) {
+                NSWorkspace.shared.open(SupportForm.url)
+            }
         }
+    }
+}
+
+/// Where a problem or question goes: the support form, which turns it into a GitHub issue. Opened in the
+/// browser with the app and the system filled in, so the report says which version it is about. Nothing
+/// is sent until the user presses the button on that page.
+enum SupportForm {
+    static var url: URL {
+        var c = URLComponents(string: "https://support.justinmeijer.nl/")!
+        let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? ""
+        c.queryItems = [
+            URLQueryItem(name: "app", value: "presort"),
+            URLQueryItem(name: "version", value: version),
+            URLQueryItem(name: "os", value: "macOS " + ProcessInfo.processInfo.operatingSystemVersionString),
+            URLQueryItem(name: "lang", value: Locale.preferredLanguages.first?.hasPrefix("en") == true ? "en" : "nl"),
+        ]
+        return c.url!
     }
 }
 
